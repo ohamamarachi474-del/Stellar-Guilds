@@ -1,6 +1,7 @@
 'use client'
 
 import React from 'react'
+import Link from 'next/link'
 import { Users, Trophy, Vote, User } from 'lucide-react'
 import { useSidebarStore } from '@/store/sidebarStore'
 import { cn } from '@/lib/utils'
@@ -20,37 +21,36 @@ interface SidebarProps {
 
 const Sidebar = ({ className }: SidebarProps) => {
   const { isOpen, closeSidebar } = useSidebarStore()
-  
+
   const navItems: SidebarItem[] = [
-    { id: 'guilds', label: 'Guilds', href: '#', icon: <Users size={20} />, isActive: true },
-    { id: 'bounties', label: 'Bounties', href: '#', icon: <Trophy size={20} /> },
-    { id: 'governance', label: 'Governance', href: '#', icon: <Vote size={20} /> },
+    { id: 'guilds', label: 'Guilds', href: '/guilds', icon: <Users size={20} />, isActive: true },
+    { id: 'bounties', label: 'Bounties', href: '/bounties', icon: <Trophy size={20} /> },
+    { id: 'governance', label: 'Governance', href: '/social/forum', icon: <Vote size={20} /> },
     { id: 'profile', label: 'Profile', href: '/profile', icon: <User size={20} /> },
     // social features
     { id: 'feed', label: 'Feed', href: '/social/feed', icon: <Users size={20} /> },
-    { id: 'messages', label: 'Messages', href: '/social/messages', icon: <Users size={20} /> },
     { id: 'forum', label: 'Forum', href: '/social/forum', icon: <Users size={20} /> },
   ]
 
   const NavItem = ({ item }: { item: SidebarItem }) => (
-    <a
+    <Link
       href={item.href}
       className={cn(
         "flex items-center space-x-3 px-3 py-2 rounded-lg transition-colors",
-        item.isActive 
-          ? "bg-stellar-lightNavy text-gold-400 border-l-4 border-gold-500" 
+        item.isActive
+          ? "bg-stellar-lightNavy text-gold-400 border-l-4 border-gold-500"
           : "text-stellar-slate hover:bg-stellar-lightNavy hover:text-stellar-lightSlate"
       )}
       onClick={() => closeSidebar()}
     >
       {item.icon}
       <span className="font-medium">{item.label}</span>
-    </a>
+    </Link>
   )
 
   return (
     <>
-      <aside 
+      <aside
         className={cn(
           "fixed inset-y-0 left-0 z-40 w-64 bg-stellar-darkNavy border-r border-stellar-lightNavy transform transition-transform duration-300 ease-in-out md:translate-x-0 md:static md:z-auto",
           isOpen ? "translate-x-0" : "-translate-x-full",
@@ -63,7 +63,7 @@ const Sidebar = ({ className }: SidebarProps) => {
               <NavItem key={item.id} item={item} />
             ))}
           </nav>
-          
+
           <div className="p-4 border-t border-stellar-lightNavy">
             <div className="text-xs text-stellar-slate uppercase tracking-wider mb-2">
               Quick Stats
@@ -86,7 +86,7 @@ const Sidebar = ({ className }: SidebarProps) => {
 
       {/* Overlay for mobile */}
       {isOpen && (
-        <div 
+        <div
           className="fixed inset-0 z-30 bg-black/50 md:hidden"
           onClick={() => closeSidebar()}
         />

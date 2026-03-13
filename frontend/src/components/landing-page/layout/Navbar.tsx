@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Menu, X, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui";
+import Link from "next/link";
 import LanguageSelector from "@/components/LanguageSelector";
 import { useTranslations } from 'next-intl';
 
@@ -25,13 +26,6 @@ export default function Navbar() {
     { label: t('reputation'), href: "/reputation-preview" },
   ];
 
-  const scrollToSection = (href: string) => {
-    const element = document.querySelector(href);
-    if (element) {
-      element.scrollIntoView({ behavior: "smooth" });
-    }
-    setIsMobileMenuOpen(false);
-  };
 
   return (
     <>
@@ -41,10 +35,9 @@ export default function Navbar() {
         transition={{ duration: 0.5 }}
         className={`
           fixed top-0 left-0 right-0 z-50 transition-all duration-300
-          ${
-            isScrolled
-              ? "bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50 shadow-lg shadow-black/20"
-              : "bg-transparent"
+          ${isScrolled
+            ? "bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50 shadow-lg shadow-black/20"
+            : "bg-transparent"
           }
         `}
       >
@@ -66,28 +59,32 @@ export default function Navbar() {
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center gap-8">
               {navLinks.map((link) => (
-                <button
+                <Link
                   key={link.label}
-                  onClick={() => scrollToSection(link.href)}
+                  href={link.href}
                   className="text-slate-300 hover:text-white transition-colors duration-200 text-sm font-medium"
                 >
                   {link.label}
-                </button>
+                </Link>
               ))}
             </div>
 
             {/* Desktop CTA */}
             <div className="hidden md:flex items-center gap-4">
               <LanguageSelector />
-              <Button
-                variant="ghost"
-                className="text-slate-300 hover:text-white hover:bg-white/5"
-              >
-                {t('login')}
-              </Button>
-              <Button className="bg-gradient-to-r from-violet-600 to-violet-700 hover:from-violet-500 hover:to-violet-600 text-white border-0 shadow-lg shadow-violet-500/25">
-                {t('getStarted')}
-              </Button>
+              <Link href="/onboarding">
+                <Button
+                  variant="ghost"
+                  className="text-slate-300 hover:text-white hover:bg-white/5"
+                >
+                  {t('login')}
+                </Button>
+              </Link>
+              <Link href="/onboarding">
+                <Button className="bg-gradient-to-r from-violet-600 to-violet-700 hover:from-violet-500 hover:to-violet-600 text-white border-0 shadow-lg shadow-violet-500/25">
+                  {t('getStarted')}
+                </Button>
+              </Link>
             </div>
 
             {/* Mobile Menu Button */}
@@ -118,27 +115,32 @@ export default function Navbar() {
             <div className="bg-slate-900/95 backdrop-blur-xl border-b border-slate-800 shadow-2xl">
               <div className="px-4 py-6 space-y-4">
                 {navLinks.map((link) => (
-                  <button
+                  <Link
                     key={link.label}
-                    onClick={() => scrollToSection(link.href)}
+                    href={link.href}
+                    onClick={() => setIsMobileMenuOpen(false)}
                     className="block w-full text-left px-4 py-3 text-slate-300 hover:text-white hover:bg-white/5 rounded-lg transition-colors"
                   >
                     {link.label}
-                  </button>
+                  </Link>
                 ))}
                 <div className="pt-4 border-t border-slate-800 space-y-3">
                   <div className="w-full flex justify-center">
                     <LanguageSelector />
                   </div>
-                  <Button
-                    variant="ghost"
-                    className="w-full justify-center text-slate-300"
-                  >
-                    Sign In
-                  </Button>
-                  <Button className="w-full bg-gradient-to-r from-violet-600 to-violet-700 text-white">
-                    Get Started
-                  </Button>
+                  <Link href="/onboarding" className="block" onClick={() => setIsMobileMenuOpen(false)}>
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-center text-slate-300"
+                    >
+                      Sign In
+                    </Button>
+                  </Link>
+                  <Link href="/onboarding" className="block" onClick={() => setIsMobileMenuOpen(false)}>
+                    <Button className="w-full bg-gradient-to-r from-violet-600 to-violet-700 text-white">
+                      Get Started
+                    </Button>
+                  </Link>
                 </div>
               </div>
             </div>

@@ -2,6 +2,7 @@
 
 import React from 'react'
 import { Menu, X, Vote } from 'lucide-react'
+import Link from 'next/link'
 import { useSidebarStore } from '@/store/sidebarStore'
 import { cn } from '@/lib/utils'
 import { WalletConnectButton } from '@/components/WalletConnector/WalletConnectButton'
@@ -37,9 +38,9 @@ const Header = ({ className }: HeaderProps) => {
           </div>
 
           <nav className="hidden md:flex items-center space-x-6 ml-auto">
-            <a href="#" className="text-stellar-slate hover:text-stellar-lightSlate transition-colors">Guilds</a>
-            <a href="#" className="text-stellar-slate hover:text-stellar-lightSlate transition-colors">Bounties</a>
-            <a href="#" className="text-stellar-slate hover:text-stellar-lightSlate transition-colors">Governance</a>
+            <Link href="/guilds" className="text-stellar-slate hover:text-stellar-lightSlate transition-colors">Guilds</Link>
+            <Link href="/bounties" className="text-stellar-slate hover:text-stellar-lightSlate transition-colors">Bounties</Link>
+            <Link href="/social/forum" className="text-stellar-slate hover:text-stellar-lightSlate transition-colors">Governance</Link>
           </nav>
 
           <div className="ml-4 flex items-center space-x-3">

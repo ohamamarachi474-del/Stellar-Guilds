@@ -1,8 +1,11 @@
 import type { Metadata } from "next";
+import { Inter } from "next/font/google";
 import "../globals.css";
 import { getMessages } from 'next-intl/server';
 import { NextIntlClientProvider } from 'next-intl';
 import { locales, defaultLocale, type Locale } from '@/i18n';
+
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
   title: "Stellar Guilds",
@@ -18,7 +21,7 @@ export default async function RootLayout({
 }) {
   const resolvedParams = await params;
   let locale = resolvedParams.locale;
-  
+
   // Validate that the incoming locale is supported
   if (!locales.includes(locale as Locale)) {
     locale = defaultLocale;
@@ -28,11 +31,15 @@ export default async function RootLayout({
   const messages = await getMessages();
 
   return (
-    <NextIntlClientProvider locale={locale} messages={messages}>
-      <div className="min-h-screen bg-stellar-navy text-stellar-white font-sans">
-        {children}
-      </div>
-    </NextIntlClientProvider>
+    <html lang={locale} className="dark">
+      <body className={inter.className}>
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          <div className="min-h-screen bg-stellar-navy text-stellar-white font-sans">
+            {children}
+          </div>
+        </NextIntlClientProvider>
+      </body>
+    </html>
   );
 }
 
