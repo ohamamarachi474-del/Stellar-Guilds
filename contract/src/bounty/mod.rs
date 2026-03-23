@@ -242,6 +242,37 @@ pub fn submit_work(env: &Env, bounty_id: u64, submission_url: String) -> bool {
     true
 }
 
+/// Approve a funded bounty directly, unlocking escrow claim for the assignee
+///
+/// # Events emitted
+/// - `(bounty, approved)` → `BountyApprovedEvent`
+pub fn approve_bounty(env: &Env, bounty_id: u64, approver: Address, assignee: Address) -> bool {
+    approver.require_auth();
+
+    let mut bounty = get_bounty(env, bounty_id).expect("Bounty not found");
+
+    if !has_permission(env, bounty.guild_id, approver.clone(), Role::Admin) {
+        panic!("Unauthorized: Approver must be a guild admin or owner");
+    }
+
+    if bounty.status != BountyStatus::Funded {
+        panic!("Bounty is not funded");
+    }
+
+    bounty.status = BountyStatus::Completed;
+    bounty.claimer = Some(assignee.clone());
+    store_bounty(env, &bounty);
+
+    emit_event(
+        env,
+        MOD_BOUNTY,
+        ACT_APPROVED,
+        BountyApprovedEvent { bounty_id, approver },
+    );
+
+    true
+}
+
 /// Approve completion of a bounty
 ///
 /// # Events emitted

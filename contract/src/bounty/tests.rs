@@ -1305,3 +1305,85 @@ fn test_admin_can_cancel_bounty() {
     let bounty = client.get_bounty(&bounty_id);
     assert_eq!(bounty.status, BountyStatus::Cancelled);
 }
+
+#[test]
+fn test_approve_bounty_success() {
+    let env = setup_env();
+    let owner = Address::generate(&env);
+    let admin = Address::generate(&env);
+    let funder = Address::generate(&env);
+    let assignee = Address::generate(&env);
+    let token = create_mock_token(&env, &owner);
+
+    set_ledger_timestamp(&env, 1000);
+    env.mock_all_auths();
+
+    let contract_id = register_and_init_contract(&env);
+    let client = StellarGuildsContractClient::new(&env, &contract_id);
+
+    let guild_id = setup_guild(&client, &env, &owner);
+    client.add_member(&guild_id, &admin, &Role::Admin, &owner);
+
+    mint_tokens(&env, &token, &funder, 1000);
+
+    let title = String::from_str(&env, "Direct Task");
+    let description = String::from_str(&env, "Directly Approved");
+    let bounty_id = client.create_bounty(
+        &guild_id,
+        &owner,
+        &title,
+        &description,
+        &100i128,
+        &token,
+        &2000u64,
+    );
+
+    client.fund_bounty(&bounty_id, &funder, &100i128);
+
+    let result = client.approve_bounty(&bounty_id, &admin, &assignee);
+    assert_eq!(result, true);
+
+    let bounty = client.get_bounty(&bounty_id);
+    assert_eq!(bounty.status, BountyStatus::Completed);
+    assert_eq!(bounty.claimer, Some(assignee.clone()));
+
+    // Escrow should be releasable to the assignee
+    let release_result = client.release_escrow(&bounty_id);
+    assert_eq!(release_result, true);
+    
+    let assignee_balance = get_token_balance(&env, &token, &assignee);
+    assert_eq!(assignee_balance, 100);
+}
+
+#[test]
+#[should_panic(expected = "Bounty is not funded")]
+fn test_approve_bounty_not_funded_fails() {
+    let env = setup_env();
+    let owner = Address::generate(&env);
+    let admin = Address::generate(&env);
+    let assignee = Address::generate(&env);
+    let token = create_mock_token(&env, &owner);
+
+    set_ledger_timestamp(&env, 1000);
+    env.mock_all_auths();
+
+    let contract_id = register_and_init_contract(&env);
+    let client = StellarGuildsContractClient::new(&env, &contract_id);
+
+    let guild_id = setup_guild(&client, &env, &owner);
+    client.add_member(&guild_id, &admin, &Role::Admin, &owner);
+
+    let title = String::from_str(&env, "Direct Task");
+    let description = String::from_str(&env, "Directly Approved");
+    let bounty_id = client.create_bounty(
+        &guild_id,
+        &owner,
+        &title,
+        &description,
+        &100i128,
+        &token,
+        &2000u64,
+    );
+
+    client.approve_bounty(&bounty_id, &admin, &assignee);
+}
