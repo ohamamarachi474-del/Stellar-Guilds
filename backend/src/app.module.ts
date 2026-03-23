@@ -8,12 +8,20 @@ import { AuthModule } from './auth/auth.module';
 import { GuildModule } from './guild/guild.module';
 import { BountyModule } from './bounty/bounty.module';
 import { SocialModule } from './social/social.module';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
     }),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60000, // 60 seconds in milliseconds
+        limit: 100, // 100 requests per 60 seconds
+      },
+    ]),
     PrismaModule,
     AuthModule,
     UserModule,
@@ -22,6 +30,12 @@ import { SocialModule } from './social/social.module';
     SocialModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule {}
