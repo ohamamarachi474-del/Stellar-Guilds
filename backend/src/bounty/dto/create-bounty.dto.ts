@@ -7,6 +7,7 @@ import {
   MaxLength,
   IsISO8601,
 } from 'class-validator';
+import { IsFutureDate } from '../decorators/future-date.decorator';
 
 export class CreateBountyDto {
   @IsString()
@@ -19,6 +20,7 @@ export class CreateBountyDto {
 
   @IsOptional()
   @IsNumber()
+  @IsPositive()
   rewardAmount?: number;
 
   @IsOptional()
@@ -27,6 +29,7 @@ export class CreateBountyDto {
 
   @IsOptional()
   @IsISO8601()
+  @IsFutureDate({ message: 'Deadline must be a valid date in the future' })
   deadline?: string;
 
   @IsOptional()
