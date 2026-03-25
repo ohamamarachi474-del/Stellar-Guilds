@@ -8,6 +8,10 @@ export { Modal } from './ui/Modal'
 export { BountyCard } from './bounty'
 export type { BountyStatus } from './bounty'
 
+// Guild Components
+export { GuildCard } from './guild'
+export type { GuildTier } from './guild'
+
 // Layout Components
 export { Header } from './layout/Header'
 export { Sidebar } from './layout/Sidebar'
