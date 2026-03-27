@@ -11,6 +11,7 @@ import { UpdateBountyDto } from './dto/update-bounty.dto';
 import { ApplyBountyDto } from './dto/apply-bounty.dto';
 import { CreateMilestoneDto } from './dto/create-milestone.dto';
 import { ReviewWorkDto } from './dto/review-work.dto';
+import { SubmitBountyWorkDto } from './dto/submit-work.dto';
 
 @Injectable()
 export class BountyService {
@@ -300,7 +301,7 @@ export class BountyService {
    */
   async submitWork(
     bountyId: string,
-    submissionUrl: string,
+    dto: SubmitBountyWorkDto,
     userId: string,
   ) {
     const bounty = await this.prisma.bounty.findUnique({
@@ -324,6 +325,17 @@ export class BountyService {
       );
     }
 
+    // Build submission data from DTO
+    const submissionData = {
+      submissions: dto.submissions.map((sub) => ({
+        prUrl: sub.prUrl,
+        description: sub.description,
+      })),
+      attachmentUrls: dto.attachmentUrls || [],
+      additionalComments: dto.additionalComments || null,
+      submittedAt: new Date(),
+    };
+
     const updatedBounty = await this.prisma.bounty.update({
       where: { id: bountyId },
       data: {
@@ -331,13 +343,28 @@ export class BountyService {
       },
     });
 
+    // Store submission details in metadata or a separate table
+    // For now, we'll create a notification with the submission data
+    try {
+      await this.prisma.notification.create({
+        data: {
+          userId: bounty.creatorId,
+          message: `Work submitted for "${bounty.title}"`,
+          type: 'BOUNTY_WORK_SUBMITTED',
+          metadata: submissionData,
+        },
+      });
+    } catch (_) {
+      // Ignore notification errors
+    }
+
     // Notify bounty creator of submission
     try {
       if (bounty.creator?.email) {
         await this.mailer.sendRevokeEmail(
           bounty.creator.email,
           `Work submitted for "${bounty.title}"`,
-          `The assigned user has submitted work for review. Submission: ${submissionUrl}`,
+          `The assigned user has submitted work for review. Check the platform for details.`,
         );
       }
     } catch (_) {
@@ -346,7 +373,7 @@ export class BountyService {
 
     return {
       bounty: updatedBounty,
-      submissionUrl,
+      submission: submissionData,
       message: 'Work submitted successfully. Awaiting review.',
     };
   }
