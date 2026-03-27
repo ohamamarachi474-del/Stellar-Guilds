@@ -17,6 +17,8 @@ use crate::dispute::storage as dispute_storage;
 use crate::dispute::types::{
     Dispute, DisputeCreatedEvent, DisputeReference, DisputeStatus, EvidenceSubmittedEvent,
 };
+use crate::events::emit::emit_event;
+use crate::events::topics::{ACT_CREATED, ACT_EVIDENCE, MOD_DISPUTE};
 use crate::milestone::storage as milestone_storage;
 use crate::milestone::types::ProjectStatus;
 
@@ -122,7 +124,7 @@ pub fn create_dispute(
         plaintiff,
         defendant,
     };
-    env.events().publish(("DisputeCreated",), event);
+    emit_event(env, MOD_DISPUTE, ACT_CREATED, event);
 
     dispute_id
 }
@@ -159,7 +161,7 @@ pub fn submit_evidence(env: &Env, dispute_id: u64, party: Address, evidence_url:
     dispute_storage::store_dispute(env, &dispute);
 
     let event = EvidenceSubmittedEvent { dispute_id, party };
-    env.events().publish(("DisputeEvidence",), event);
+    emit_event(env, MOD_DISPUTE, ACT_EVIDENCE, event);
 
     true
 }

@@ -28,6 +28,7 @@
 /// Soroban charges per-byte for event data. Keep payload structs lean; use
 /// IDs to reference large blobs stored elsewhere rather than inlining them.
 use crate::events::types::{EventEnvelope, EVENT_SCHEMA_VERSION, EVENT_SEQUENCE_KEY};
+use crate::integration::events::record_standardized_event;
 use soroban_sdk::{Env, IntoVal, Symbol, Val};
 
 /// Read the current global event sequence number.
@@ -35,7 +36,7 @@ use soroban_sdk::{Env, IntoVal, Symbol, Val};
 fn get_sequence(env: &Env) -> u64 {
     env.storage()
         .instance()
-        .get::<_, u64>(&soroban_sdk::symbol_short!("evt_seq"))
+        .get::<_, u64>(&Symbol::new(env, EVENT_SEQUENCE_KEY))
         .unwrap_or(0)
 }
 
@@ -43,7 +44,7 @@ fn get_sequence(env: &Env) -> u64 {
 fn set_sequence(env: &Env, seq: u64) {
     env.storage()
         .instance()
-        .set(&soroban_sdk::symbol_short!("evt_seq"), &seq);
+        .set(&Symbol::new(env, EVENT_SEQUENCE_KEY), &seq);
 }
 
 /// Emit a standardized event with full envelope metadata.
@@ -95,6 +96,8 @@ where
     // Publish the actual payload on the specific (module, action) topic so
     // consumers interested only in e.g. bounty:created can filter precisely.
     env.events().publish((module_sym, action_sym), data);
+
+    record_standardized_event(env, module, action);
 }
 
 /// Convenience helper: emit an event and return a value in one expression.

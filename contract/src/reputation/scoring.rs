@@ -1,4 +1,6 @@
-﻿use soroban_sdk::{Address, Env, String, Symbol};
+use crate::events::emit::emit_event;
+use crate::events::topics::{ACT_BADGE_EARNED, ACT_UPDATED, MOD_REPUTATION};
+use soroban_sdk::{Address, Env, String};
 
 use crate::guild::types::Role;
 use crate::reputation::storage::{
@@ -68,10 +70,7 @@ pub fn record_contribution(
         new_total_score: profile.total_score,
         contribution_type,
     };
-    env.events().publish(
-        (Symbol::new(env, "reputation"), Symbol::new(env, "updated")),
-        event,
-    );
+    emit_event(env, MOD_REPUTATION, ACT_UPDATED, event);
 
     // Check and award badges
     check_and_award_badges(env, guild_id, contributor, &profile);
@@ -255,10 +254,7 @@ fn maybe_award_badge(
         badge_type,
         badge_name,
     };
-    env.events().publish(
-        (Symbol::new(env, "reputation"), Symbol::new(env, "badge")),
-        event,
-    );
+    emit_event(env, MOD_REPUTATION, ACT_BADGE_EARNED, event);
 }
 
 // â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€

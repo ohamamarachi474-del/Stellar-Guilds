@@ -1,3 +1,8 @@
+use crate::events::emit::emit_event;
+use crate::events::topics::{
+    ACT_APPROVED, ACT_COMPLETED, ACT_EMERGENCY_UPGRADE, ACT_REJECTED, ACT_STARTED, ACT_UPDATED,
+    ACT_UPGRADE_EXECUTED, ACT_UPGRADE_PROPOSED, MOD_UPGRADE,
+};
 use crate::upgrade::storage;
 use crate::upgrade::types::{MigrationPlan, UpgradeProposal, UpgradeStatus, Version};
 use soroban_sdk::{symbol_short, Address, Env, String};
@@ -43,8 +48,7 @@ pub fn propose_upgrade(
     storage::store_upgrade_proposal(env, &proposal);
 
     // Emit event for the proposal
-    env.events()
-        .publish(("upgrade", "proposal_created"), proposal_id);
+    emit_event(env, MOD_UPGRADE, ACT_UPGRADE_PROPOSED, proposal_id);
 
     proposal_id
 }
@@ -69,12 +73,10 @@ pub fn vote_on_proposal(
 
         if proposal.votes_for >= required_votes {
             storage::update_proposal_status(env, proposal_id, UpgradeStatus::Approved);
-            env.events()
-                .publish(("upgrade", "proposal_approved"), proposal_id);
+            emit_event(env, MOD_UPGRADE, ACT_APPROVED, proposal_id);
         } else if proposal.votes_against >= required_votes {
             storage::update_proposal_status(env, proposal_id, UpgradeStatus::Rejected);
-            env.events()
-                .publish(("upgrade", "proposal_rejected"), proposal_id);
+            emit_event(env, MOD_UPGRADE, ACT_REJECTED, proposal_id);
         }
     }
 
@@ -115,7 +117,7 @@ pub fn execute_upgrade(
     storage::store_upgrade_proposal(env, &proposal);
 
     // Emit upgrade execution event
-    env.events().publish(("upgrade", "executed"), proposal_id);
+    emit_event(env, MOD_UPGRADE, ACT_UPGRADE_EXECUTED, proposal_id);
 
     Ok(())
 }
@@ -144,8 +146,7 @@ pub fn emergency_upgrade(
     storage::set_current_version(env, new_version);
 
     // Emit emergency upgrade event
-    env.events()
-        .publish(("upgrade", "emergency_executed"), new_version.clone());
+    emit_event(env, MOD_UPGRADE, ACT_EMERGENCY_UPGRADE, new_version.clone());
 
     Ok(())
 }
@@ -166,8 +167,7 @@ pub fn toggle_emergency_upgrades(
 
     storage::set_emergency_upgrade_enabled(env, enable);
 
-    env.events()
-        .publish(("upgrade", "emergency_toggled"), enable);
+    emit_event(env, MOD_UPGRADE, ACT_UPDATED, enable);
 
     Ok(())
 }
@@ -189,8 +189,7 @@ pub fn register_migration_plan(
 
     storage::store_migration_plan(env, proposal_id, migration_plan);
 
-    env.events()
-        .publish(("upgrade", "migration_registered"), proposal_id);
+    emit_event(env, MOD_UPGRADE, ACT_UPDATED, proposal_id);
 
     Ok(())
 }
@@ -201,15 +200,13 @@ fn perform_state_migration(env: &Env, plan: &MigrationPlan) -> Result<(), &'stat
     // based on the migration plan's selector
     // For now, we'll just log the migration attempt
 
-    env.events()
-        .publish(("upgrade", "migration_started"), plan.from_version.clone());
+    emit_event(env, MOD_UPGRADE, ACT_STARTED, plan.from_version.clone());
 
     // Placeholder for actual migration logic
     // This would involve calling migration functions that transform data
     // from the old format to the new format
 
-    env.events()
-        .publish(("upgrade", "migration_completed"), plan.to_version.clone());
+    emit_event(env, MOD_UPGRADE, ACT_COMPLETED, plan.to_version.clone());
 
     Ok(())
 }

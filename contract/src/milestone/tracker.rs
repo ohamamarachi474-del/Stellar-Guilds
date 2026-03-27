@@ -1,7 +1,12 @@
-﻿use soroban_sdk::{Address, Env, String, Vec};
+use soroban_sdk::{Address, Env, String, Vec};
 
 use crate::dispute::storage as dispute_storage;
 use crate::dispute::types::DisputeReference;
+use crate::events::emit::emit_event;
+use crate::events::topics::{
+    ACT_APPROVED, ACT_CANCELLED, ACT_COMPLETED, ACT_CREATED, ACT_REJECTED, ACT_RELEASED,
+    ACT_STARTED, ACT_SUBMITTED, ACT_UPDATED, MOD_MILESTONE,
+};
 use crate::guild::membership::has_permission;
 use crate::guild::types::Role;
 use crate::milestone::storage::{
@@ -128,7 +133,7 @@ pub fn create_project(
             payment_amount: milestone.payment_amount,
             deadline: milestone.deadline,
         };
-        env.events().publish(("MilestoneAdded",), event);
+        emit_event(env, MOD_MILESTONE, ACT_CREATED, event);
 
         order += 1;
     }
@@ -142,7 +147,7 @@ pub fn create_project(
         total_amount,
         is_sequential,
     };
-    env.events().publish(("ProjectCreated",), project_event);
+    emit_event(env, MOD_MILESTONE, ACT_CREATED, project_event);
 
     project_id
 }
@@ -220,7 +225,7 @@ pub fn add_milestone(
         payment_amount: amount,
         deadline,
     };
-    env.events().publish(("MilestoneAdded",), event);
+    emit_event(env, MOD_MILESTONE, ACT_CREATED, event);
 
     milestone_id
 }
@@ -267,7 +272,7 @@ pub fn start_milestone(env: &Env, milestone_id: u64, contributor: Address) -> bo
         old_status,
         new_status: milestone.status.clone(),
     };
-    env.events().publish(("MilestoneStatusChanged",), event);
+    emit_event(env, MOD_MILESTONE, ACT_STARTED, event);
 
     true
 }
@@ -304,7 +309,7 @@ pub fn submit_milestone(env: &Env, milestone_id: u64, proof_url: String) -> bool
         proof_url,
         version: milestone.version,
     };
-    env.events().publish(("MilestoneSubmitted",), submit_event);
+    emit_event(env, MOD_MILESTONE, ACT_SUBMITTED, submit_event);
 
     let status_event = MilestoneStatusChangedEvent {
         project_id: project.id,
@@ -312,8 +317,7 @@ pub fn submit_milestone(env: &Env, milestone_id: u64, proof_url: String) -> bool
         old_status,
         new_status: milestone.status.clone(),
     };
-    env.events()
-        .publish(("MilestoneStatusChanged",), status_event);
+    emit_event(env, MOD_MILESTONE, ACT_UPDATED, status_event);
 
     true
 }
@@ -346,8 +350,7 @@ pub fn approve_milestone(env: &Env, milestone_id: u64, approver: Address) -> boo
         old_status,
         new_status: milestone.status.clone(),
     };
-    env.events()
-        .publish(("MilestoneStatusChanged",), status_event);
+    emit_event(env, MOD_MILESTONE, ACT_APPROVED, status_event);
 
     // Automatic payment release (Option B via treasury)
     let _ = release_milestone_payment_internal(env, &mut project, &mut milestone);
@@ -386,7 +389,7 @@ pub fn reject_milestone(env: &Env, milestone_id: u64, approver: Address, reason:
         milestone_id,
         reason,
     };
-    env.events().publish(("MilestoneRejected",), reject_event);
+    emit_event(env, MOD_MILESTONE, ACT_REJECTED, reject_event);
 
     let status_event = MilestoneStatusChangedEvent {
         project_id: project.id,
@@ -394,8 +397,7 @@ pub fn reject_milestone(env: &Env, milestone_id: u64, approver: Address, reason:
         old_status,
         new_status: milestone.status.clone(),
     };
-    env.events()
-        .publish(("MilestoneStatusChanged",), status_event);
+    emit_event(env, MOD_MILESTONE, ACT_UPDATED, status_event);
 
     true
 }
@@ -484,7 +486,7 @@ fn release_milestone_payment_internal(
         token,
         recipient: project.contributor.clone(),
     };
-    env.events().publish(("MilestonePaymentReleased",), event);
+    emit_event(env, MOD_MILESTONE, ACT_RELEASED, event);
 
     // If all milestones are completed, mark project as completed
     let ids = get_project_milestone_ids(env, project.id);
@@ -508,7 +510,7 @@ fn release_milestone_payment_internal(
             old_status,
             new_status: ProjectStatus::Completed,
         };
-        env.events().publish(("ProjectStatusChanged",), pe);
+        emit_event(env, MOD_MILESTONE, ACT_COMPLETED, pe);
     }
 
     true
@@ -569,7 +571,7 @@ pub fn cancel_project(env: &Env, project_id: u64, caller: Address) -> bool {
         old_status,
         new_status: ProjectStatus::Cancelled,
     };
-    env.events().publish(("ProjectStatusChanged",), event);
+    emit_event(env, MOD_MILESTONE, ACT_CANCELLED, event);
 
     true
 }

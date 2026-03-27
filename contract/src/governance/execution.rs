@@ -1,4 +1,6 @@
-﻿use soroban_sdk::{Address, Env, Symbol};
+use crate::events::emit::emit_event;
+use crate::events::topics::{ACT_EXECUTED, MOD_GOVERNANCE};
+use soroban_sdk::{Address, Env};
 
 use crate::governance::proposals::get_proposal as load_proposal;
 use crate::governance::storage::store_proposal;
@@ -58,13 +60,7 @@ pub fn execute_proposal(env: &Env, proposal_id: u64, executor: Address) -> bool 
         proposal_id,
         success,
     };
-    env.events().publish(
-        (
-            Symbol::new(env, "proposal_executed"),
-            Symbol::new(env, "v0"),
-        ),
-        event,
-    );
+    emit_event(env, MOD_GOVERNANCE, ACT_EXECUTED, event);
 
     success
 }

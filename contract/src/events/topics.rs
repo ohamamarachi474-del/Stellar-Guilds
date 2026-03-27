@@ -36,6 +36,7 @@ pub const MOD_ALLOWANCE: &str = "allowance";
 pub const MOD_EMERGENCY: &str = "emergency";
 pub const MOD_UPGRADE: &str = "upgrade";
 pub const MOD_PROXY: &str = "proxy";
+pub const MOD_INTEGRATION: &str = "integration";
 
 // =========== Shared action identifiers (used across multiple modules) ===========
 
@@ -51,6 +52,10 @@ pub const ACT_PAUSED: &str = "paused";
 pub const ACT_RESUMED: &str = "resumed";
 pub const ACT_FUNDED: &str = "funded";
 pub const ACT_FAILED: &str = "failed";
+pub const ACT_EMITTED: &str = "emitted";
+pub const ACT_RECORDED: &str = "recorded";
+pub const ACT_ACCEPTED: &str = "accepted";
+pub const ACT_TRANSFERRED: &str = "transferred";
 
 // =========== Guild-specific actions ===========
 
@@ -100,6 +105,7 @@ pub const ACT_TIER_CHANGED: &str = "tier_changed";
 pub const ACT_PAYMENT_PROCESSED: &str = "payment_ok";
 pub const ACT_PAYMENT_FAILED: &str = "payment_fail";
 pub const ACT_PAYMENT_RETRIED: &str = "payment_retry";
+pub const ACT_GRACE_STARTED: &str = "grace_started";
 
 // =========== Multisig-specific actions ===========
 

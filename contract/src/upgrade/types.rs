@@ -2,7 +2,7 @@ use soroban_sdk::{contracttype, Address};
 
 /// Represents the current version of the contract
 #[contracttype]
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Version {
     pub major: u32,
     pub minor: u32,

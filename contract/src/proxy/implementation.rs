@@ -1,3 +1,7 @@
+use crate::events::emit::emit_event;
+use crate::events::topics::{
+    ACT_ACCEPTED, ACT_PAUSED, ACT_RESUMED, ACT_TRANSFERRED, ACT_UPGRADE_EXECUTED, MOD_PROXY,
+};
 use crate::proxy::storage;
 use crate::proxy::types::{ProxyConfig, UpgradeTransaction};
 use soroban_sdk::{symbol_short, Address, Env};
@@ -44,8 +48,10 @@ pub fn upgrade(
     storage::record_upgrade_transaction(env, &upgrade_tx);
 
     // Emit upgrade event
-    env.events().publish(
-        ("proxy", "upgraded"),
+    emit_event(
+        env,
+        MOD_PROXY,
+        ACT_UPGRADE_EXECUTED,
         (upgrade_id, new_implementation.clone()),
     );
 
@@ -69,8 +75,10 @@ pub fn transfer_admin(
     storage::set_admin(env, new_admin);
 
     // Emit admin transfer event
-    env.events().publish(
-        ("proxy", "admin_transferred"),
+    emit_event(
+        env,
+        MOD_PROXY,
+        ACT_TRANSFERRED,
         (caller.clone(), new_admin.clone()),
     );
 
@@ -84,8 +92,7 @@ pub fn accept_admin(env: &Env, new_admin: &Address) -> Result<(), &'static str> 
     // In a real implementation, this would involve a two-step process
     // where the new admin accepts the transfer
     // For simplicity, we'll just emit an event
-    env.events()
-        .publish(("proxy", "admin_accepted"), new_admin.clone());
+    emit_event(env, MOD_PROXY, ACT_ACCEPTED, new_admin.clone());
 
     Ok(())
 }
@@ -101,8 +108,7 @@ pub fn emergency_stop(env: &Env, caller: &Address) -> Result<(), &'static str> {
 
     // In a real implementation, this would set a paused state
     // For now, we'll just emit an event
-    env.events()
-        .publish(("proxy", "emergency_stop"), caller.clone());
+    emit_event(env, MOD_PROXY, ACT_PAUSED, caller.clone());
 
     Ok(())
 }
@@ -118,7 +124,7 @@ pub fn resume(env: &Env, caller: &Address) -> Result<(), &'static str> {
 
     // In a real implementation, this would unset a paused state
     // For now, we'll just emit an event
-    env.events().publish(("proxy", "resume"), caller.clone());
+    emit_event(env, MOD_PROXY, ACT_RESUMED, caller.clone());
 
     Ok(())
 }

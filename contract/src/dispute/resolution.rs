@@ -7,6 +7,8 @@ use crate::dispute::storage;
 use crate::dispute::types::{
     DisputeReference, DisputeStatus, FundDistribution, Resolution, VoteDecision,
 };
+use crate::events::emit::emit_event;
+use crate::events::topics::{ACT_EXECUTED, ACT_EXPIRED, ACT_RESOLVED, MOD_DISPUTE};
 use crate::guild::storage as guild_storage;
 use crate::milestone::storage as milestone_storage;
 use crate::milestone::types::{MilestoneStatus, ProjectStatus};
@@ -105,7 +107,7 @@ pub fn resolve_dispute(env: &Env, dispute_id: u64) -> Resolution {
         }
 
         let event = crate::dispute::types::DisputeExpiredEvent { dispute_id };
-        env.events().publish(("DisputeExpired",), event);
+        emit_event(env, MOD_DISPUTE, ACT_EXPIRED, event);
 
         return resolution;
     }
@@ -119,7 +121,7 @@ pub fn resolve_dispute(env: &Env, dispute_id: u64) -> Resolution {
         dispute_id,
         status: dispute.status.clone(),
     };
-    env.events().publish(("DisputeResolved",), event);
+    emit_event(env, MOD_DISPUTE, ACT_RESOLVED, event);
 
     let distributions = execute_resolution(env, dispute_id);
     resolution.fund_distribution = distributions;
@@ -276,7 +278,7 @@ pub fn execute_resolution(env: &Env, dispute_id: u64) -> Vec<FundDistribution> {
     storage::store_dispute(env, &dispute);
 
     let event = crate::dispute::types::ResolutionExecutedEvent { dispute_id };
-    env.events().publish(("ResolutionExecuted",), event);
+    emit_event(env, MOD_DISPUTE, ACT_EXECUTED, event);
 
     distributions
 }

@@ -1,6 +1,10 @@
-﻿use crate::subscription::types::{BillingCycle, MembershipTier, SubscriptionStatus};
+﻿use crate::subscription::storage;
+use crate::subscription::types::{
+    BillingCycle, MembershipTier, RetryConfig, RevenueRecord, Subscription, SubscriptionPlan,
+    SubscriptionStatus,
+};
 use crate::{StellarGuildsContract, StellarGuildsContractClient};
-use soroban_sdk::testutils::Address as _;
+use soroban_sdk::testutils::{Address as _, Ledger, LedgerInfo};
 use soroban_sdk::{Address, Env, String, Vec};
 
 fn setup_env() -> Env {
@@ -14,6 +18,19 @@ fn register_and_init_contract(env: &Env) -> Address {
     let client = StellarGuildsContractClient::new(env, &contract_id);
     client.initialize(&Address::generate(&env));
     contract_id
+}
+
+fn set_ledger_timestamp(env: &Env, timestamp: u64) {
+    env.ledger().set(LedgerInfo {
+        timestamp,
+        protocol_version: 20,
+        sequence_number: 1,
+        network_id: Default::default(),
+        base_reserve: 10,
+        min_temp_entry_ttl: 100,
+        min_persistent_entry_ttl: 100,
+        max_entry_ttl: 1_000_000,
+    });
 }
 
 fn create_test_plan(
@@ -622,4 +639,185 @@ fn test_change_tier_unauthorized() {
 
     // Try to change tier with different user - should panic
     let _ = client.change_subscription_tier(&subscription_id, &premium_plan_id, &true, &other_user);
+}
+
+#[test]
+fn test_subscription_storage_indexes_and_revenue_queries() {
+    let env = setup_env();
+    env.mock_all_auths();
+    let contract_id = register_and_init_contract(&env);
+
+    let creator = Address::generate(&env);
+    let subscriber = Address::generate(&env);
+    let benefits = Vec::new(&env);
+    let empty_reason: Option<String> = None;
+
+    env.as_contract(&contract_id, || {
+        storage::initialize_subscription_storage(&env);
+
+        let plan_id_1 = storage::get_next_plan_id(&env);
+        let plan_id_2 = storage::get_next_plan_id(&env);
+        let subscription_id = storage::get_next_subscription_id(&env);
+        let revenue_id = storage::get_next_revenue_record_id(&env);
+
+        let plan_1 = SubscriptionPlan {
+            id: plan_id_1,
+            guild_id: 77,
+            name: String::from_str(&env, "Starter"),
+            description: String::from_str(&env, "starter plan"),
+            tier: MembershipTier::Basic,
+            price: 100,
+            token: None,
+            billing_cycle: BillingCycle::Monthly,
+            is_active: true,
+            benefits: benefits.clone(),
+            created_by: creator.clone(),
+            created_at: 1,
+        };
+        let plan_2 = SubscriptionPlan {
+            id: plan_id_2,
+            guild_id: 77,
+            name: String::from_str(&env, "Pro"),
+            description: String::from_str(&env, "pro plan"),
+            tier: MembershipTier::Premium,
+            price: 300,
+            token: None,
+            billing_cycle: BillingCycle::Monthly,
+            is_active: true,
+            benefits,
+            created_by: creator.clone(),
+            created_at: 2,
+        };
+
+        storage::store_plan(&env, &plan_1);
+        storage::store_plan(&env, &plan_2);
+        storage::add_plan_to_guild(&env, 77, plan_id_1);
+        storage::add_plan_to_guild(&env, 77, plan_id_1);
+        storage::add_plan_to_guild(&env, 77, plan_id_2);
+
+        let guild_plans = storage::get_guild_plans(&env, 77);
+        assert_eq!(guild_plans.len(), 2);
+        assert_eq!(storage::get_all_plans(&env, 1).len(), 1);
+
+        let subscription = Subscription {
+            id: subscription_id,
+            plan_id: plan_id_1,
+            subscriber: subscriber.clone(),
+            status: SubscriptionStatus::Active,
+            current_tier: MembershipTier::Basic,
+            started_at: 10,
+            ends_at: None,
+            next_billing_at: 20,
+            last_payment_at: None,
+            last_payment_amount: None,
+            failed_payment_count: 0,
+            grace_period_ends_at: None,
+            auto_renew: true,
+            cancelled_at: None,
+            cancellation_reason: empty_reason.clone(),
+        };
+        storage::store_subscription(&env, &subscription);
+        storage::store_user_subscription(&env, &subscriber, 77, subscription_id);
+        storage::add_active_subscription(&env, subscription_id);
+        storage::add_active_subscription(&env, subscription_id);
+
+        assert_eq!(storage::get_active_subscriptions(&env).len(), 1);
+        assert_eq!(
+            storage::get_user_subscription(&env, &subscriber, 77)
+                .unwrap()
+                .plan_id,
+            plan_id_1
+        );
+        assert_eq!(storage::get_subscriptions_by_plan(&env, plan_id_1, 10).len(), 1);
+
+        let record = RevenueRecord {
+            id: revenue_id,
+            guild_id: 77,
+            plan_id: plan_id_1,
+            subscription_id,
+            subscriber: subscriber.clone(),
+            amount: 100,
+            token: None,
+            paid_at: 1000,
+            billing_cycle: BillingCycle::Monthly,
+            is_retry: false,
+            retry_attempt: 0,
+        };
+        storage::store_revenue_record(&env, &record);
+        storage::add_guild_revenue(&env, 77, 0, revenue_id);
+        assert_eq!(storage::get_revenue_record(&env, revenue_id).unwrap().amount, 100);
+        assert_eq!(storage::get_guild_revenue_records(&env, 77, 0).len(), 1);
+
+        let retry = RetryConfig {
+            max_retries: 5,
+            initial_delay_seconds: 600,
+            backoff_multiplier: 3,
+            grace_period_seconds: 86_400,
+        };
+        storage::set_retry_config(&env, &retry);
+        assert_eq!(storage::get_retry_config(&env), retry);
+
+        storage::remove_active_subscription(&env, subscription_id);
+        assert_eq!(storage::get_active_subscriptions(&env).len(), 0);
+    });
+}
+
+#[test]
+fn test_payment_processing_and_grace_period_cleanup() {
+    let env = setup_env();
+    let contract_id = register_and_init_contract(&env);
+    let client = StellarGuildsContractClient::new(&env, &contract_id);
+    let creator = Address::generate(&env);
+    let subscriber = Address::generate(&env);
+
+    env.mock_all_auths();
+    set_ledger_timestamp(&env, 1_000);
+
+    let plan_id = create_test_plan(
+        &env,
+        &client,
+        &creator,
+        42,
+        MembershipTier::Standard,
+        1000,
+        BillingCycle::Monthly,
+    );
+    let subscription_id = client.subscribe(&plan_id, &subscriber, &true);
+
+    let billing_boundary = 1_000 + BillingCycle::Monthly.duration_seconds();
+    set_ledger_timestamp(&env, billing_boundary + 100);
+    assert!(client.process_subscription_payment(&subscription_id));
+
+    let processed = client.get_subscription(&subscription_id);
+    assert_eq!(processed.last_payment_at, Some(billing_boundary + 100));
+    assert_eq!(processed.last_payment_amount, Some(1000));
+    assert_eq!(processed.failed_payment_count, 0);
+    assert_eq!(processed.status, SubscriptionStatus::Active);
+    assert!(processed.next_billing_at > billing_boundary + 100);
+
+    env.as_contract(&contract_id, || {
+        let records = storage::get_guild_revenue_records(&env, 42, 1_100);
+        assert_eq!(records.len(), 1);
+        assert_eq!(records.get(0).unwrap().subscription_id, subscription_id);
+    });
+
+    set_ledger_timestamp(&env, 3_000);
+    env.as_contract(&contract_id, || {
+        let mut grace = storage::get_subscription(&env, subscription_id).unwrap();
+        grace.status = SubscriptionStatus::GracePeriod;
+        grace.grace_period_ends_at = Some(2_500);
+        grace.failed_payment_count = 1;
+        storage::store_subscription(&env, &grace);
+        storage::add_active_subscription(&env, subscription_id);
+    });
+
+    assert_eq!(client.process_due_subscriptions(&10), 1);
+
+    let cancelled = client.get_subscription(&subscription_id);
+    assert_eq!(cancelled.status, SubscriptionStatus::Cancelled);
+    assert_eq!(
+        cancelled.cancellation_reason,
+        Some(String::from_str(&env, "Grace period expired"))
+    );
+    assert!(!client.is_subscription_active(&subscription_id));
 }

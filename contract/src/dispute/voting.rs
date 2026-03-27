@@ -2,6 +2,8 @@
 
 use crate::dispute::storage;
 use crate::dispute::types::{DisputeStatus, Vote, VoteDecision};
+use crate::events::emit::emit_event;
+use crate::events::topics::{ACT_VOTE_CAST, MOD_DISPUTE};
 use crate::governance::types::role_weight;
 use crate::guild::storage as guild_storage;
 
@@ -82,7 +84,7 @@ pub fn cast_vote(
         decision,
         weight,
     };
-    env.events().publish(("DisputeVote",), event);
+    emit_event(env, MOD_DISPUTE, ACT_VOTE_CAST, event);
 
     true
 }

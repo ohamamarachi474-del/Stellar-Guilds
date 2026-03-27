@@ -1,4 +1,9 @@
-﻿use soroban_sdk::{token::Client as TokenClient, Address, Env, String, Symbol, Vec};
+use crate::events::emit::emit_event;
+use crate::events::topics::{
+    ACT_APPROVED, ACT_CREATED, ACT_EXECUTED, ACT_FUNDED, ACT_GRANTED, ACT_PAUSED, ACT_PROPOSED,
+    ACT_RESUMED, ACT_UPDATED, MOD_TREASURY,
+};
+use soroban_sdk::{token::Client as TokenClient, Address, Env, String, Vec};
 
 use crate::analytics::storage::store_snapshot;
 use crate::analytics::types::TreasurySnapshot;
@@ -63,10 +68,7 @@ pub fn initialize_treasury(
         guild_id,
         owner,
     };
-    env.events().publish(
-        (Symbol::new(env, "treasury"), Symbol::new(env, "init")),
-        event,
-    );
+    emit_event(env, MOD_TREASURY, ACT_CREATED, event);
 
     id
 }
@@ -134,10 +136,7 @@ pub fn deposit(
         amount,
         token,
     };
-    env.events().publish(
-        (Symbol::new(env, "treasury"), Symbol::new(env, "deposit")),
-        event,
-    );
+    emit_event(env, MOD_TREASURY, ACT_FUNDED, event);
 
     true
 }
@@ -191,10 +190,7 @@ pub fn propose_withdrawal(
         amount,
         token,
     };
-    env.events().publish(
-        (Symbol::new(env, "treasury"), Symbol::new(env, "withdraw")),
-        event,
-    );
+    emit_event(env, MOD_TREASURY, ACT_PROPOSED, event);
 
     tx_id
 }
@@ -229,10 +225,7 @@ pub fn approve_transaction(env: &Env, tx_id: u64, approver: Address) -> bool {
         tx_id,
         approver,
     };
-    env.events().publish(
-        (Symbol::new(env, "treasury"), Symbol::new(env, "tx_approv")),
-        event,
-    );
+    emit_event(env, MOD_TREASURY, ACT_APPROVED, event);
 
     true
 }
@@ -421,13 +414,7 @@ pub fn execute_transaction(env: &Env, tx_id: u64, executor: Address) -> bool {
         treasury_id: tx.treasury_id,
         tx_id,
     };
-    env.events().publish(
-        (
-            Symbol::new(env, "treasury"),
-            Symbol::new(env, "tx_executed"),
-        ),
-        event,
-    );
+    emit_event(env, MOD_TREASURY, ACT_EXECUTED, event);
 
     true
 }
@@ -512,13 +499,7 @@ pub fn execute_milestone_payment(
     store_transaction(env, &tx);
 
     let event = TransactionExecutedEvent { treasury_id, tx_id };
-    env.events().publish(
-        (
-            Symbol::new(env, "treasury"),
-            Symbol::new(env, "tx_executed"),
-        ),
-        event,
-    );
+    emit_event(env, MOD_TREASURY, ACT_EXECUTED, event);
 
     true
 }
@@ -562,10 +543,7 @@ pub fn set_budget(
         allocated_amount: amount,
         period_seconds,
     };
-    env.events().publish(
-        (Symbol::new(env, "treasury"), Symbol::new(env, "budget")),
-        event,
-    );
+    emit_event(env, MOD_TREASURY, ACT_UPDATED, event);
 
     true
 }
@@ -644,10 +622,7 @@ pub fn grant_allowance(
         amount_per_period: amount,
         period_seconds,
     };
-    env.events().publish(
-        (Symbol::new(env, "treasury"), Symbol::new(env, "allow")),
-        event,
-    );
+    emit_event(env, MOD_TREASURY, ACT_GRANTED, event);
 
     true
 }
@@ -663,10 +638,8 @@ pub fn emergency_pause(env: &Env, treasury_id: u64, signer: Address, paused: boo
         treasury_id,
         paused,
     };
-    env.events().publish(
-        (Symbol::new(env, "treasury"), Symbol::new(env, "pause")),
-        event,
-    );
+    let action = if paused { ACT_PAUSED } else { ACT_RESUMED };
+    emit_event(env, MOD_TREASURY, action, event);
 
     true
 }

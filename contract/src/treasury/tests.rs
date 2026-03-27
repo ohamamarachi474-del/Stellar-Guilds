@@ -1,6 +1,6 @@
 ﻿#[cfg(test)]
 mod tests {
-    use crate::treasury::types::{TransactionStatus, TransactionType};
+    use crate::treasury::types::{Allowance, TransactionStatus, TransactionType, Treasury};
     use crate::StellarGuildsContract;
     use crate::StellarGuildsContractClient;
     use soroban_sdk::testutils::{Address as _, Ledger, LedgerInfo};
@@ -268,5 +268,44 @@ mod tests {
 
         // Panics here: treasury is paused
         client.propose_withdrawal(&treasury_id, &signer1, &recipient, &100i128, &None, &reason);
+    }
+
+    #[test]
+    fn test_treasury_type_helpers() {
+        let env = setup_env();
+        set_ledger_timestamp(&env, 1000);
+        let signer = Address::generate(&env);
+        let other = Address::generate(&env);
+        let mut signers = Vec::new(&env);
+        signers.push_back(signer.clone());
+
+        let treasury = Treasury {
+            id: 1,
+            guild_id: 1,
+            owner: signer.clone(),
+            signers,
+            approval_threshold: 1,
+            high_value_threshold: 1000,
+            balance_xlm: 0,
+            token_balances: soroban_sdk::Map::new(&env),
+            total_deposits: 0,
+            total_withdrawals: 0,
+            paused: false,
+        };
+        assert!(treasury.is_signer(&signer));
+        assert!(!treasury.is_signer(&other));
+
+        let mut allowance = Allowance {
+            treasury_id: 1,
+            admin: signer,
+            token: None,
+            amount_per_period: 500,
+            remaining_amount: 100,
+            period_seconds: 60,
+            period_start: 900,
+        };
+        allowance.ensure_period_current(&env);
+        assert_eq!(allowance.period_start, 1000);
+        assert_eq!(allowance.remaining_amount, 500);
     }
 }

@@ -1,4 +1,6 @@
 ﻿use crate::emergency::types::{EmergencyConfig, EmergencyStatus};
+use crate::events::emit::emit_event;
+use crate::events::topics::{ACT_EXECUTED, MOD_EMERGENCY};
 use soroban_sdk::{contracttype, Address, Env, String};
 
 #[contracttype]
@@ -67,11 +69,5 @@ pub fn log_emergency_action(env: &Env, action: String, performed_by: Address, re
         .persistent()
         .set(&DataKey::EmergencyLog(id), &log);
 
-    env.events().publish(
-        (
-            String::from_str(env, "emergency_action"),
-            log.action.clone(),
-        ),
-        log,
-    );
+    emit_event(env, MOD_EMERGENCY, ACT_EXECUTED, log);
 }

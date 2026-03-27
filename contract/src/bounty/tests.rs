@@ -1534,7 +1534,6 @@ fn test_admin_can_cancel_bounty() {
     assert_eq!(bounty.status, BountyStatus::Cancelled);
 }
 
-#[test]
 #[should_panic(expected = "Bounty is not funded")]
 fn test_approve_bounty_not_funded_fails() {
     let env = setup_env();

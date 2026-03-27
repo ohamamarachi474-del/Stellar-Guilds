@@ -62,7 +62,7 @@ pub struct GuildConfig {
 
 /// Member struct representing a guild member
 #[contracttype]
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Member {
     /// Address of the member
     pub address: Address,

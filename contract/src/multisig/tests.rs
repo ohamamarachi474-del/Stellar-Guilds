@@ -262,4 +262,143 @@ mod tests {
         assert!(client.ms_execute_operation(&op_id, &signer2));
         assert!(client.ms_execute_governance_proposal(&op_id, &proposal_id, &owner));
     }
+
+    #[test]
+    fn test_account_management_controls() {
+        let (env, owner, signer1, signer2) = setup_env();
+        env.mock_all_auths();
+        let client = init_client(&env);
+        let account_id = register_ms_account(&env, &client, &owner, &signer1, &signer2);
+        let signer3 = Address::generate(&env);
+        let replacement = Address::generate(&env);
+
+        assert!(client.ms_add_signer(&account_id, &signer3, &owner));
+        let account = client.ms_get_account(&account_id);
+        assert!(account.signers.contains(&signer3));
+
+        assert!(client.ms_update_threshold(&account_id, &3, &owner));
+        assert_eq!(client.ms_get_account(&account_id).threshold, 3);
+
+        assert!(client.ms_freeze_account(&account_id, &owner));
+        assert_eq!(client.ms_get_account(&account_id).status, crate::multisig::types::AccountStatus::Frozen);
+        assert!(client.ms_unfreeze_account(&account_id, &owner));
+        assert_eq!(client.ms_get_account(&account_id).status, crate::multisig::types::AccountStatus::Active);
+
+        assert!(client.ms_rotate_signer(&account_id, &signer3, &replacement, &owner));
+        let account = client.ms_get_account(&account_id);
+        assert!(account.signers.contains(&replacement));
+        assert!(!account.signers.contains(&signer3));
+
+        assert!(client.ms_remove_signer(&account_id, &replacement, &owner, &2));
+        let account = client.ms_get_account(&account_id);
+        assert_eq!(account.threshold, 2);
+        assert!(!account.signers.contains(&replacement));
+    }
+
+    #[test]
+    fn test_cancel_expire_and_pending_operation_queries() {
+        let (env, owner, signer1, signer2) = setup_env();
+        env.mock_all_auths();
+        let client = init_client(&env);
+        let account_id = register_ms_account(&env, &client, &owner, &signer1, &signer2);
+
+        let op_a = client.ms_propose_operation(
+            &account_id,
+            &OperationType::EmergencyAction,
+            &String::from_str(&env, "cancel me"),
+            &owner,
+        );
+        assert_eq!(client.ms_get_pending_ops(&account_id).len(), 1);
+        assert!(client.ms_cancel_operation(&op_a, &owner));
+        assert_eq!(client.ms_get_operation(&op_a).status, OperationStatus::Cancelled);
+        assert_eq!(client.ms_get_pending_ops(&account_id).len(), 0);
+
+        let op_b = client.ms_propose_operation(
+            &account_id,
+            &OperationType::GovernanceUpdate,
+            &String::from_str(&env, "expire me"),
+            &owner,
+        );
+        set_timestamp(&env, env.ledger().timestamp() + TIMEOUT_48H + 5);
+        assert!(client.ms_check_and_expire(&op_b));
+        assert_eq!(client.ms_get_operation(&op_b).status, OperationStatus::Expired);
+
+        let op_c = client.ms_propose_operation(
+            &account_id,
+            &OperationType::TreasuryWithdrawal,
+            &String::from_str(&env, "sweep me"),
+            &owner,
+        );
+        let op_d = client.ms_propose_operation(
+            &account_id,
+            &OperationType::TreasuryWithdrawal,
+            &String::from_str(&env, "expire now"),
+            &owner,
+        );
+        assert!(client.ms_emergency_extend_timeout(&op_c, &TIMEOUT_24H, &owner));
+        assert!(client.ms_emergency_expire(&op_d, &owner));
+        assert_eq!(client.ms_get_operation(&op_d).status, OperationStatus::Expired);
+
+        set_timestamp(&env, env.ledger().timestamp() + TIMEOUT_24H + 5);
+        assert_eq!(client.ms_sweep_expired(&account_id), 1);
+        assert_eq!(client.ms_get_operation(&op_c).status, OperationStatus::Expired);
+    }
+
+    #[test]
+    fn test_policy_round_trip_and_reset() {
+        let (env, owner, signer1, signer2) = setup_env();
+        env.mock_all_auths();
+        let client = init_client(&env);
+        let account_id = register_ms_account(&env, &client, &owner, &signer1, &signer2);
+
+        assert!(client.ms_set_policy(
+            &account_id,
+            &OperationType::EmergencyAction,
+            &3,
+            &true,
+            &TIMEOUT_24H,
+            &true,
+            &owner,
+        ));
+        let policy = client.ms_get_policy(&account_id, &OperationType::EmergencyAction);
+        assert_eq!(policy.min_signatures, 3);
+        assert!(policy.require_all_signers);
+        assert!(policy.require_owner_signature);
+
+        assert!(client.ms_reset_policy(&account_id, &OperationType::EmergencyAction, &owner));
+        let reset = client.ms_get_policy(&account_id, &OperationType::EmergencyAction);
+        assert_eq!(reset.min_signatures, 1);
+        assert!(!reset.require_all_signers);
+        assert!(!reset.require_owner_signature);
+    }
+
+    #[test]
+    #[should_panic(expected = "ms_register_account error")]
+    fn test_register_invalid_threshold_panics() {
+        let (env, owner, signer1, signer2) = setup_env();
+        env.mock_all_auths();
+        let client = init_client(&env);
+        let mut signers = Vec::new(&env);
+        signers.push_back(signer1);
+        signers.push_back(signer2);
+
+        client.ms_register_account(&owner, &signers, &1, &None, &TIMEOUT_24H);
+    }
+
+    #[test]
+    #[should_panic(expected = "ms_propose_operation error")]
+    fn test_frozen_account_cannot_propose_operation() {
+        let (env, owner, signer1, signer2) = setup_env();
+        env.mock_all_auths();
+        let client = init_client(&env);
+        let account_id = register_ms_account(&env, &client, &owner, &signer1, &signer2);
+
+        assert!(client.ms_freeze_account(&account_id, &owner));
+        client.ms_propose_operation(
+            &account_id,
+            &OperationType::EmergencyAction,
+            &String::from_str(&env, "blocked"),
+            &owner,
+        );
+    }
 }

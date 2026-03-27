@@ -1,4 +1,10 @@
-﻿use crate::subscription::storage::{
+use crate::events::emit::emit_event;
+use crate::events::topics::{
+    ACT_CANCELLED, ACT_CREATED, ACT_FAILED, ACT_GRACE_STARTED, ACT_PAUSED, ACT_PAYMENT_FAILED,
+    ACT_PAYMENT_PROCESSED, ACT_PAYMENT_RETRIED, ACT_PLAN_CREATED, ACT_RECORDED, ACT_RESUMED,
+    ACT_TIER_CHANGED, MOD_SUBSCRIPTION,
+};
+use crate::subscription::storage::{
     add_active_subscription, add_guild_revenue, add_plan_to_guild, get_next_plan_id,
     get_next_revenue_record_id, get_next_subscription_id, get_plan, get_retry_config,
     get_subscription, get_user_subscription, remove_active_subscription, store_plan,
@@ -78,7 +84,7 @@ pub fn create_plan(
         price,
         billing_cycle,
     };
-    env.events().publish(("PlanCreated",), event);
+    emit_event(env, MOD_SUBSCRIPTION, ACT_PLAN_CREATED, event);
 
     Ok(plan_id)
 }
@@ -148,7 +154,7 @@ pub fn subscribe(
         tier: plan.tier,
         next_billing_at: subscription.next_billing_at,
     };
-    env.events().publish(("SubscriptionCreated",), event);
+    emit_event(env, MOD_SUBSCRIPTION, ACT_CREATED, event);
 
     Ok(subscription_id)
 }
@@ -218,7 +224,12 @@ pub fn process_payment(
                 success: true,
                 retry_attempt,
             };
-            env.events().publish(("PaymentProcessed",), event);
+            let action = if retry_attempt > 0 {
+                ACT_PAYMENT_RETRIED
+            } else {
+                ACT_PAYMENT_PROCESSED
+            };
+            emit_event(env, MOD_SUBSCRIPTION, action, event);
 
             Ok(true)
         }
@@ -248,7 +259,7 @@ pub fn process_payment(
                     grace_period_ends_at: grace_end,
                     failed_payment_count: subscription.failed_payment_count,
                 };
-                env.events().publish(("GracePeriodStarted",), event);
+                emit_event(env, MOD_SUBSCRIPTION, ACT_GRACE_STARTED, event);
             }
 
             store_subscription(env, &subscription);
@@ -260,7 +271,7 @@ pub fn process_payment(
                 success: false,
                 retry_attempt,
             };
-            env.events().publish(("PaymentProcessed",), event);
+            emit_event(env, MOD_SUBSCRIPTION, ACT_PAYMENT_FAILED, event);
 
             Err(SubscriptionError::PaymentFailed)
         }
@@ -333,7 +344,7 @@ fn record_revenue(
         amount,
         paid_at: now,
     };
-    env.events().publish(("RevenueRecorded",), event);
+    emit_event(env, MOD_SUBSCRIPTION, ACT_RECORDED, event);
 
     record_id
 }
@@ -367,6 +378,8 @@ pub fn pause_subscription(
     subscription.status = SubscriptionStatus::Paused;
     store_subscription(env, &subscription);
     remove_active_subscription(env, subscription_id);
+
+    emit_event(env, MOD_SUBSCRIPTION, ACT_PAUSED, subscription.clone());
 
     Ok(true)
 }
@@ -408,6 +421,8 @@ pub fn resume_subscription(
 
     store_subscription(env, &subscription);
     add_active_subscription(env, subscription_id);
+
+    emit_event(env, MOD_SUBSCRIPTION, ACT_RESUMED, subscription.clone());
 
     Ok(true)
 }
@@ -455,7 +470,7 @@ pub fn cancel_subscription(
         cancelled_by: caller,
         reason,
     };
-    env.events().publish(("SubscriptionCancelled",), event);
+    emit_event(env, MOD_SUBSCRIPTION, ACT_CANCELLED, event);
 
     Ok(true)
 }
@@ -555,7 +570,7 @@ pub fn change_tier(
         new_tier: new_plan.tier,
         proration_amount: proration.as_ref().map(|p| p.amount).unwrap_or(0),
     };
-    env.events().publish(("TierChanged",), event);
+    emit_event(env, MOD_SUBSCRIPTION, ACT_TIER_CHANGED, event);
 
     Ok(proration)
 }
@@ -629,7 +644,7 @@ pub fn process_due_subscriptions(env: &Env, limit: u32) -> u32 {
                             cancelled_by: sub.subscriber.clone(),
                             reason: sub.cancellation_reason.clone(),
                         };
-                        env.events().publish(("SubscriptionCancelled",), event);
+                        emit_event(env, MOD_SUBSCRIPTION, ACT_CANCELLED, event);
                         processed += 1;
                     }
                 }

@@ -16,7 +16,7 @@ pub enum BountyStatus {
 
 /// Bounty struct containing all bounty metadata and state
 #[contracttype]
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Eq, PartialEq)]
 pub struct Bounty {
     /// Unique identifier for the bounty
     pub id: u64,

@@ -1,4 +1,6 @@
-﻿use soroban_sdk::{Address, Env, String, Symbol, Vec};
+use crate::events::emit::emit_event;
+use crate::events::topics::{ACT_CANCELLED, ACT_PROPOSED, ACT_UPDATED, MOD_GOVERNANCE};
+use soroban_sdk::{Address, Env, String, Vec};
 
 use crate::governance::storage::{
     get_config, get_guild_proposals, get_next_proposal_id, get_proposal as load_proposal,
@@ -10,9 +12,6 @@ use crate::governance::types::{
 };
 use crate::guild::storage as guild_storage;
 use crate::guild::types::Member;
-
-const EVENT_TOPIC_PROPOSAL_CREATED: &str = "proposal_created";
-const EVENT_TOPIC_CONFIG_UPDATED: &str = "gov_config_updated";
 
 fn validate_execution_payload(
     env: &Env,
@@ -112,13 +111,7 @@ pub fn create_proposal(
         proposal_type,
     };
 
-    env.events().publish(
-        (
-            Symbol::new(env, EVENT_TOPIC_PROPOSAL_CREATED),
-            Symbol::new(env, "v0"),
-        ),
-        event,
-    );
+    emit_event(env, MOD_GOVERNANCE, ACT_PROPOSED, event);
 
     id
 }
@@ -148,13 +141,7 @@ pub fn cancel_proposal(env: &Env, proposal_id: u64, canceller: Address) -> bool 
     store_proposal(env, &proposal);
 
     let event = crate::governance::types::ProposalCancelledEvent { proposal_id };
-    env.events().publish(
-        (
-            Symbol::new(env, "proposal_cancelled"),
-            Symbol::new(env, "v0"),
-        ),
-        event,
-    );
+    emit_event(env, MOD_GOVERNANCE, ACT_CANCELLED, event);
 
     true
 }
@@ -199,13 +186,7 @@ pub fn update_governance_config(
     set_config(env, guild_id, &config);
 
     let event = GovernanceConfigUpdatedEvent { guild_id };
-    env.events().publish(
-        (
-            Symbol::new(env, EVENT_TOPIC_CONFIG_UPDATED),
-            Symbol::new(env, "v0"),
-        ),
-        event,
-    );
+    emit_event(env, MOD_GOVERNANCE, ACT_UPDATED, event);
 
     true
 }

@@ -1,6 +1,10 @@
 ﻿#[cfg(test)]
 mod tests {
-    use crate::governance::types::{ProposalStatus, ProposalType, VoteDecision};
+    use crate::governance::{proposals, storage};
+    use crate::governance::types::{
+        ExecutionPayload, GovernanceConfig, Proposal, ProposalStatus, ProposalType, Vote,
+        VoteDecision,
+    };
     use crate::guild::types::Role;
     use crate::StellarGuildsContract;
     use crate::StellarGuildsContractClient;
@@ -210,5 +214,163 @@ mod tests {
 
         // Should panic since it didn't pass quorum
         client.execute_proposal(&proposal_id, &owner);
+    }
+
+    #[test]
+    fn test_storage_round_trip_for_votes_delegations_and_configs() {
+        let env = setup_env();
+        env.mock_all_auths();
+        let contract_id = register_and_init_contract(&env);
+        let client = StellarGuildsContractClient::new(&env, &contract_id);
+        let owner = Address::generate(&env);
+        let guild_id = setup_guild(&client, &env, &owner);
+        let voter = Address::generate(&env);
+        let delegate = Address::generate(&env);
+
+        env.as_contract(&contract_id, || {
+            let proposal_id = storage::get_next_proposal_id(&env);
+            let proposal = Proposal {
+                id: proposal_id,
+                guild_id,
+                proposer: owner.clone(),
+                proposal_type: ProposalType::GeneralDecision,
+                title: String::from_str(&env, "Stored"),
+                description: String::from_str(&env, "Stored proposal"),
+                voting_start: 100,
+                voting_end: 200,
+                status: ProposalStatus::Active,
+                votes_for: 0,
+                votes_against: 0,
+                votes_abstain: 0,
+                execution_payload: ExecutionPayload::GeneralDecision,
+                passed_at: None,
+                executed_at: None,
+            };
+
+            storage::store_proposal(&env, &proposal);
+            storage::store_proposal(&env, &proposal);
+            assert_eq!(storage::get_proposal(&env, proposal_id).unwrap().title, proposal.title);
+            assert_eq!(storage::get_guild_proposals(&env, guild_id).len(), 1);
+
+            let vote = Vote {
+                voter: voter.clone(),
+                proposal_id,
+                decision: VoteDecision::For,
+                weight: 5,
+                timestamp: 123,
+            };
+            storage::store_vote(&env, &vote);
+            assert_eq!(
+                storage::get_vote(&env, proposal_id, &voter).unwrap().decision,
+                VoteDecision::For
+            );
+            assert_eq!(storage::get_all_votes(&env, proposal_id).len(), 1);
+
+            storage::set_delegation(&env, guild_id, &voter, &delegate);
+            assert_eq!(storage::get_delegate(&env, guild_id, &voter), Some(delegate.clone()));
+            storage::remove_delegation(&env, guild_id, &voter);
+            assert_eq!(storage::get_delegate(&env, guild_id, &voter), None);
+
+            assert_eq!(storage::get_config(&env, guild_id), GovernanceConfig::default());
+            let updated = GovernanceConfig {
+                quorum_percentage: 45,
+                approval_threshold: 70,
+                voting_period_days: 5,
+                min_proposer_reputation: 2,
+            };
+            storage::set_config(&env, guild_id, &updated);
+            assert_eq!(storage::get_config(&env, guild_id), updated);
+        });
+    }
+
+    #[test]
+    fn test_cancel_proposal_updates_active_list_and_config() {
+        let env = setup_env();
+        let owner = Address::generate(&env);
+        env.mock_all_auths();
+
+        let contract_id = register_and_init_contract(&env);
+        let client = StellarGuildsContractClient::new(&env, &contract_id);
+        let (guild_id, admin, _member, _contributor) = setup_guild_with_members(&env, &client, &owner);
+
+        let proposal_a = client.create_proposal(
+            &guild_id,
+            &owner,
+            &ProposalType::GeneralDecision,
+            &String::from_str(&env, "A"),
+            &String::from_str(&env, "first"),
+        );
+        let proposal_b = client.create_proposal(
+            &guild_id,
+            &admin,
+            &ProposalType::GeneralDecision,
+            &String::from_str(&env, "B"),
+            &String::from_str(&env, "second"),
+        );
+
+        assert_eq!(client.get_active_proposals(&guild_id).len(), 2);
+        assert!(client.cancel_proposal(&proposal_b, &owner));
+        assert_eq!(client.get_proposal(&proposal_b).status, ProposalStatus::Cancelled);
+        assert_eq!(client.get_active_proposals(&guild_id).len(), 1);
+        assert_eq!(client.get_active_proposals(&guild_id).get(0).unwrap().id, proposal_a);
+
+        let new_cfg = GovernanceConfig {
+            quorum_percentage: 40,
+            approval_threshold: 66,
+            voting_period_days: 10,
+            min_proposer_reputation: 1,
+        };
+        assert!(client.update_governance_config(&guild_id, &owner, &new_cfg));
+
+        env.as_contract(&contract_id, || {
+            assert_eq!(storage::get_config(&env, guild_id), new_cfg);
+        });
+    }
+
+    #[test]
+    #[should_panic(expected = "execution payload does not match proposal type")]
+    fn test_create_proposal_rejects_mismatched_payload() {
+        let env = setup_env();
+        let owner = Address::generate(&env);
+        env.mock_all_auths();
+
+        let contract_id = register_and_init_contract(&env);
+        let client = StellarGuildsContractClient::new(&env, &contract_id);
+        let guild_id = setup_guild(&client, &env, &owner);
+
+        env.as_contract(&contract_id, || {
+            proposals::create_proposal(
+                &env,
+                guild_id,
+                owner.clone(),
+                ProposalType::AddMember,
+                String::from_str(&env, "Bad payload"),
+                String::from_str(&env, "mismatch"),
+                ExecutionPayload::GeneralDecision,
+            );
+        });
+    }
+
+    #[test]
+    #[should_panic(expected = "invalid quorum percentage")]
+    fn test_update_governance_config_rejects_invalid_quorum() {
+        let env = setup_env();
+        let owner = Address::generate(&env);
+        env.mock_all_auths();
+
+        let contract_id = register_and_init_contract(&env);
+        let client = StellarGuildsContractClient::new(&env, &contract_id);
+        let guild_id = setup_guild(&client, &env, &owner);
+
+        client.update_governance_config(
+            &guild_id,
+            &owner,
+            &GovernanceConfig {
+                quorum_percentage: 0,
+                approval_threshold: 60,
+                voting_period_days: 7,
+                min_proposer_reputation: 0,
+            },
+        );
     }
 }

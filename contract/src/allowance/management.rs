@@ -1,4 +1,8 @@
-﻿use soroban_sdk::{Address, Env, Symbol, Vec};
+use crate::events::emit::emit_event;
+use crate::events::topics::{
+    ACT_DECREASED, ACT_EXECUTED, ACT_GRANTED, ACT_INCREASED, ACT_REVOKED, MOD_ALLOWANCE,
+};
+use soroban_sdk::{Address, Env, Vec};
 
 use super::storage;
 use super::types::{
@@ -53,10 +57,7 @@ pub fn approve(
         expires_at,
         operation,
     };
-    env.events().publish(
-        (Symbol::new(env, "allowance"), Symbol::new(env, "approved")),
-        event,
-    );
+    emit_event(env, MOD_ALLOWANCE, ACT_GRANTED, event);
 
     Ok(())
 }
@@ -96,10 +97,7 @@ pub fn increase_allowance(
         expires_at: allowance.expires_at,
         operation: allowance.operation,
     };
-    env.events().publish(
-        (Symbol::new(env, "allowance"), Symbol::new(env, "approved")),
-        event,
-    );
+    emit_event(env, MOD_ALLOWANCE, ACT_INCREASED, event);
 
     Ok(())
 }
@@ -145,10 +143,7 @@ pub fn decrease_allowance(
         expires_at: allowance.expires_at,
         operation: allowance.operation,
     };
-    env.events().publish(
-        (Symbol::new(env, "allowance"), Symbol::new(env, "approved")),
-        event,
-    );
+    emit_event(env, MOD_ALLOWANCE, ACT_DECREASED, event);
 
     Ok(())
 }
@@ -176,10 +171,7 @@ pub fn revoke(
         spender,
         token,
     };
-    env.events().publish(
-        (Symbol::new(env, "allowance"), Symbol::new(env, "revoked")),
-        event,
-    );
+    emit_event(env, MOD_ALLOWANCE, ACT_REVOKED, event);
 
     Ok(())
 }
@@ -231,10 +223,7 @@ pub fn spend(
         amount_spent: amount,
         remaining: allowance.remaining(),
     };
-    env.events().publish(
-        (Symbol::new(env, "allowance"), Symbol::new(env, "spent")),
-        event,
-    );
+    emit_event(env, MOD_ALLOWANCE, ACT_EXECUTED, event);
 
     Ok(())
 }
