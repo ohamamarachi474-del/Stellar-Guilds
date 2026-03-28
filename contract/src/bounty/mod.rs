@@ -521,3 +521,4 @@ pub fn cancel_bounty_auth(env: &Env, bounty_id: u64, canceller: Address) -> bool
 
 #[cfg(test)]
 mod tests;
+
