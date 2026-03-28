@@ -12,6 +12,7 @@ import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import { HealthModule } from './health/health.module';
 import { LoggerModule } from './logger/logger.module';
+import { QueueModule } from './queue/queue.module';
 
 @Module({
   imports: [
@@ -32,6 +33,7 @@ import { LoggerModule } from './logger/logger.module';
     BountyModule,
     SocialModule,
     HealthModule,
+    QueueModule,
   ],
   controllers: [AppController],
   providers: [
