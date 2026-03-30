@@ -8,6 +8,7 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { StorageService } from '../storage/storage.service';
 import {
+  CreateUserDto,
   UpdateUserDto,
   ChangePasswordDto,
   SearchUserDto,
@@ -428,7 +429,7 @@ export class UserService {
     });
   }
 
-  async createUser(data: any): Promise<any> {
+  async createUser(data: CreateUserDto): Promise<any> {
     return this.prisma.user.create({
       data,
     });
