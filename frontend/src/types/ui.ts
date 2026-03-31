@@ -1,156 +1,170 @@
-import React from 'react'
+import React from "react";
 
 // UI Component Types
-export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger'
-export type ButtonSize = 'sm' | 'md' | 'lg'
+export type ButtonVariant =
+  | "primary"
+  | "secondary"
+  | "outline"
+  | "ghost"
+  | "danger";
+export type ButtonSize = "sm" | "md" | "lg";
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: ButtonVariant
-  size?: ButtonSize
-  isLoading?: boolean
-  leftIcon?: React.ReactNode
-  rightIcon?: React.ReactNode
+  variant?: ButtonVariant;
+  size?: ButtonSize;
+  isLoading?: boolean;
+  leftIcon?: React.ReactNode;
+  rightIcon?: React.ReactNode;
 }
 
 export interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
-  label?: string
-  error?: string
-  helperText?: string
+  label?: string;
+  error?: string;
+  helperText?: string;
 }
 
 export interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
-  title?: string
-  description?: string
-  footer?: React.ReactNode
+  title?: string;
+  description?: string;
+  footer?: React.ReactNode;
 }
 
 export interface ModalProps {
-  isOpen: boolean
-  onClose: () => void
-  title?: string
-  children: React.ReactNode
-  size?: 'sm' | 'md' | 'lg' | 'xl'
+  isOpen: boolean;
+  onClose: () => void;
+  title?: string;
+  children: React.ReactNode;
+  size?: "sm" | "md" | "lg" | "xl";
 }
 
 // Layout Types
 export interface SidebarItem {
-  id: string
-  label: string
-  href: string
-  icon: React.ReactNode
-  isActive?: boolean
+  id: string;
+  label: string;
+  href: string;
+  icon: React.ReactNode;
+  isActive?: boolean;
 }
 
 export interface NavigationItem {
-  id: string
-  label: string
-  href: string
-  isActive?: boolean
+  id: string;
+  label: string;
+  href: string;
+  isActive?: boolean;
 }
 
 // Mock Data Types
 export interface Guild {
-  id: string
-  name: string
-  description: string
-  tier: 'bronze' | 'silver' | 'gold' | 'platinum'
-  memberCount: number
-  reputation: number
-  createdAt: string
-  logo?: string
+  id: string;
+  name: string;
+  description: string;
+  tier: "bronze" | "silver" | "gold" | "platinum";
+  memberCount: number;
+  reputation: number;
+  createdAt: string;
+  logo?: string;
 }
 
 export interface Bounty {
-  id: string
-  title: string
-  description: string
+  id: string;
+  title: string;
+  description: string;
   reward: {
-    amount: number
-    currency: string
-  }
-  deadline: string
-  status: 'open' | 'in-progress' | 'completed' | 'expired'
-  guildId: string
-  createdAt: string
+    amount: number;
+    currency: string;
+  };
+  deadline: string;
+  status: "open" | "in-progress" | "completed" | "expired";
+  guildId: string;
+  createdAt: string;
 }
 
 export interface UserProfile {
-  id: string
-  username: string
-  email: string
-  avatar?: string
-  reputation: number
-  joinedAt: string
-  guilds: string[]
+  id: string;
+  username: string;
+  email: string;
+  avatar?: string;
+  reputation: number;
+  joinedAt: string;
+  guilds: string[];
 }
 
 // Governance Types
-export type ProposalType = 'treasury' | 'rule-change' | 'membership' | 'general'
-export type ProposalStatus = 'draft' | 'active' | 'passed' | 'rejected' | 'executed'
-export type VoteChoice = 'for' | 'against' | 'abstain'
+export type ProposalType =
+  | "treasury"
+  | "rule-change"
+  | "membership"
+  | "general";
+export type ProposalStatus =
+  | "draft"
+  | "active"
+  | "passed"
+  | "rejected"
+  | "executed";
+export type VoteChoice = "for" | "against" | "abstain";
 
 export interface Vote {
-  id: string
-  proposalId: string
-  voterId: string
-  voterAddress: string
-  choice: VoteChoice
-  votingPower: number
-  timestamp: string
+  id: string;
+  proposalId: string;
+  voterId: string;
+  voterAddress: string;
+  choice: VoteChoice;
+  votingPower: number;
+  timestamp: string;
 }
 
 export interface VotingStats {
-  for: number
-  against: number
-  abstain: number
-  total: number
-  forPower: number
-  againstPower: number
-  abstainPower: number
-  totalPower: number
+  for: number;
+  against: number;
+  abstain: number;
+  total: number;
+  forPower: number;
+  againstPower: number;
+  abstainPower: number;
+  totalPower: number;
 }
 
 export interface Proposal {
-  id: string
-  guildId: string
-  title: string
-  description: string
-  type: ProposalType
-  status: ProposalStatus
-  proposerId: string
-  proposerAddress: string
-  proposerName: string
-  createdAt: string
-  startDate: string
-  endDate: string
-  quorum: number
-  quorumThreshold: number
-  executionData?: string
-  votes: Vote[]
-  votingStats: VotingStats
+  id: string;
+  guildId: string;
+  title: string;
+  description: string;
+  type: ProposalType;
+  status: ProposalStatus;
+  proposerId: string;
+  proposerAddress: string;
+  proposerName: string;
+  createdAt: string;
+  startDate: string;
+  endDate: string;
+  quorum: number;
+  quorumThreshold: number;
+  executionData?: string;
+  votes: Vote[];
+  votingStats: VotingStats;
 }
 
 // Dropzone Types
-export type DropzoneVariant = 'avatar' | 'banner'
+export type DropzoneVariant = "avatar" | "banner";
 
 export interface DropzoneProps {
-  variant?: DropzoneVariant
-  value?: string | null
-  onChange?: (url: string | null) => void
-  onError?: (error: string) => void
-  disabled?: boolean
-  className?: string
+  variant?: DropzoneVariant;
+  value?: string | null;
+  onChange?: (url: string | null) => void;
+  onError?: (error: string) => void;
+  disabled?: boolean;
+  className?: string;
 }
 
 export interface FileValidationResult {
-  isValid: boolean
-  error?: string
+  isValid: boolean;
+  error?: string;
 }
 
 export interface UploadResult {
-  success: boolean
-  url?: string
-  error?: string
+  success: boolean;
+  url?: string;
+  error?: string;
 }
 
 export interface Tab {
@@ -164,4 +178,24 @@ export interface TabsProps {
   tabs: Tab[];
   defaultTab?: string;
   className?: string;
+}
+
+// Badge Types
+export type BadgeVariant =
+  | "open"
+  | "in-progress"
+  | "completed"
+  | "expired"
+  | "draft"
+  | "active"
+  | "passed"
+  | "rejected"
+  | "executed"
+  | "default";
+export type BadgeSize = "sm" | "md" | "lg";
+
+export interface BadgeProps extends React.HTMLAttributes<HTMLSpanElement> {
+  variant?: BadgeVariant;
+  size?: BadgeSize;
+  children: React.ReactNode;
 }
