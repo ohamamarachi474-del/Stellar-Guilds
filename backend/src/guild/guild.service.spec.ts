@@ -116,6 +116,77 @@ describe('GuildService (settings integration)', () => {
     }
   });
 
+  it('sorts guilds by TVL when sort=tvl', async () => {
+    const mockGuilds = [
+      {
+        id: 'g1',
+        name: 'Guild 1',
+        settings: { discoverable: true },
+        bounties: [{ rewardAmount: 100 }, { rewardAmount: 200 }],
+      },
+      {
+        id: 'g2',
+        name: 'Guild 2',
+        settings: { discoverable: true },
+        bounties: [{ rewardAmount: 500 }],
+      },
+      {
+        id: 'g3',
+        name: 'Guild 3',
+        settings: { discoverable: true },
+        bounties: [],
+      },
+    ];
+
+    prisma.guild.findMany.mockResolvedValue(mockGuilds);
+
+    const res = await service.searchGuilds(undefined, 0, 10, 'tvl');
+
+    // Should be sorted by TVL descending: g2 (500), g1 (300), g3 (0)
+    expect(res.items.length).toBe(3);
+    expect(res.items[0].id).toBe('g2');
+    expect(res.items[0].tvl).toBe(500);
+    expect(res.items[1].id).toBe('g1');
+    expect(res.items[1].tvl).toBe(300);
+    expect(res.items[2].id).toBe('g3');
+    expect(res.items[2].tvl).toBe(0);
+  });
+
+  it('paginates TVL sorted results correctly', async () => {
+    const mockGuilds = [
+      {
+        id: 'g1',
+        name: 'Guild 1',
+        settings: { discoverable: true },
+        bounties: [{ rewardAmount: 100 }],
+      },
+      {
+        id: 'g2',
+        name: 'Guild 2',
+        settings: { discoverable: true },
+        bounties: [{ rewardAmount: 500 }],
+      },
+      {
+        id: 'g3',
+        name: 'Guild 3',
+        settings: { discoverable: true },
+        bounties: [{ rewardAmount: 300 }],
+      },
+    ];
+
+    prisma.guild.findMany.mockResolvedValue(mockGuilds);
+
+    const res = await service.searchGuilds(undefined, 0, 2, 'tvl');
+
+    // Page 0, size 2: should return g2 (500) and g3 (300)
+    expect(res.items.length).toBe(2);
+    expect(res.items[0].id).toBe('g2');
+    expect(res.items[1].id).toBe('g3');
+    expect(res.total).toBe(3);
+    expect(res.page).toBe(0);
+    expect(res.size).toBe(2);
+  });
+
   it('getGuild includes active member and open bounty counts', async () => {
     const guildData = {
       id: 'guild-1',

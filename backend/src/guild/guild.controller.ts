@@ -58,7 +58,7 @@ export class GuildController {
 
   @Get()
   async search(@Query() query: SearchGuildDto) {
-    return this.guildService.searchGuilds(query.q, query.page, query.size);
+    return this.guildService.searchGuilds(query.q, query.page, query.size, query.sort);
   }
 
   @UseGuards(JwtAuthGuard)

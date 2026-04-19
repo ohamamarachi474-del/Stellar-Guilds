@@ -175,7 +175,7 @@ export class GuildService {
     return this.prisma.guild.delete({ where: { id: guildId } });
   }
 
-  async searchGuilds(q: string | undefined, page = 0, size = 20) {
+  async searchGuilds(q: string | undefined, page = 0, size = 20, sort?: string) {
     const textFilter = q
       ? {
           OR: [
@@ -194,6 +194,51 @@ export class GuildService {
       ? { AND: [textFilter, discoverFilter] }
       : discoverFilter;
 
+    // If sorting by TVL, we need to calculate TVL for each guild
+    if (sort === 'tvl') {
+      // Get all discoverable guilds
+      const allGuilds = await this.prisma.guild.findMany({
+        where,
+        include: {
+          bounties: {
+            where: {
+              status: { in: ['OPEN', 'PENDING'] },
+            },
+            select: {
+              rewardAmount: true,
+            },
+          },
+        },
+      });
+
+      // Calculate TVL for each guild
+      const guildsWithTvl = allGuilds.map((guild) => {
+        const tvl = guild.bounties.reduce(
+          (sum, bounty) => sum + (bounty.rewardAmount || 0),
+          0,
+        );
+        return {
+          ...guild,
+          tvl,
+          bounties: undefined, // Remove bounties from response
+        };
+      });
+
+      // Sort by TVL descending
+      guildsWithTvl.sort((a, b) => b.tvl - a.tvl);
+
+      // Apply pagination
+      const paginatedItems = guildsWithTvl.slice(page * size, (page + 1) * size);
+
+      return {
+        items: paginatedItems,
+        total: guildsWithTvl.length,
+        page,
+        size,
+      };
+    }
+
+    // Default sorting (no TVL)
     const [items, total] = await Promise.all([
       this.prisma.guild.findMany({ where, skip: page * size, take: size }),
       this.prisma.guild.count({ where }),
