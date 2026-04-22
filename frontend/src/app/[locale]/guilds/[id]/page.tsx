@@ -8,6 +8,7 @@ import { ArrowLeft, Settings, UserPlus, Activity, Users as UsersIcon } from 'luc
 import { useGuildStore } from '@/store/guildStore'
 import { GuildStats } from '@/features/guilds/components/GuildStats'
 import { MemberList } from '@/features/guilds/components/MemberList'
+import { SpotlightCard } from '@/features/guilds/components/SpotlightCard'
 import { Button } from '@/components/ui/Button'
 import type { GuildRole } from '@/features/guilds/types'
 
@@ -19,6 +20,16 @@ export default function GuildDetailPage() {
   const { currentGuild, fetchGuildById, changeMemberRole, removeMember, isLoading } = useGuildStore()
   const [activeTab, setActiveTab] = useState<TabType>('overview')
   const [currentUserRole] = useState<GuildRole>('owner') // Mock: current user is owner
+
+  // Mock: Spotlight member data (top monthly contributor)
+  const spotlightMember = currentGuild?.members.length
+    ? {
+        ...currentGuild.members[0],
+        bio: 'Leading blockchain developer specializing in Soroban smart contracts and DeFi protocols. Passionate about building scalable decentralized applications.',
+        techTags: ['Rust', 'Soroban', 'DeFi'],
+        monthlyReputation: 1250
+      }
+    : null
 
   useEffect(() => {
     if (guildId) {
@@ -126,6 +137,13 @@ export default function GuildDetailPage() {
             </div>
           </div>
         </div>
+
+        {/* Spotlight Card */}
+        {spotlightMember && (
+          <div className="mb-6">
+            <SpotlightCard member={spotlightMember} />
+          </div>
+        )}
 
         {/* Stats */}
         <div className="mb-6">
