@@ -327,11 +327,7 @@ export class BountyService {
    * Submit work for review
    * State machine transition: IN_PROGRESS -> IN_REVIEW
    */
-  async submitWork(
-    bountyId: string,
-    dto: SubmitBountyWorkDto,
-    userId: string,
-  ) {
+  async submitWork(bountyId: string, dto: SubmitBountyWorkDto, userId: string) {
     const bounty = await this.prisma.bounty.findUnique({
       where: { id: bountyId },
       include: { creator: true },
@@ -415,11 +411,7 @@ export class BountyService {
    * - IN_REVIEW + approve -> COMPLETED_PENDING_CLAIM
    * - IN_REVIEW + reject -> IN_PROGRESS (with feedback)
    */
-  async reviewWork(
-    bountyId: string,
-    dto: ReviewWorkDto,
-    reviewerId: string,
-  ) {
+  async reviewWork(bountyId: string, dto: ReviewWorkDto, reviewerId: string) {
     const bounty = await this.prisma.bounty.findUnique({
       where: { id: bountyId },
       include: { assignee: true },
@@ -540,5 +532,4 @@ export class BountyService {
       data: { deletedAt: new Date() },
     });
   }
-
 }

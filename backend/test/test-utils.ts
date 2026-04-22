@@ -74,9 +74,7 @@ export async function clearDatabase(prisma: PrismaService): Promise<void> {
 
   if (tables.length > 0) {
     try {
-      await prisma.$executeRawUnsafe(
-        `TRUNCATE TABLE ${tables} CASCADE;`,
-      );
+      await prisma.$executeRawUnsafe(`TRUNCATE TABLE ${tables} CASCADE;`);
     } catch (error) {
       console.error('Failed to clear database:', error);
       throw error;

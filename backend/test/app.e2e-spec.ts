@@ -48,9 +48,7 @@ describe('AppController (e2e)', () => {
 
   describe('/docs (GET)', () => {
     it('should return swagger documentation', () => {
-      return request(app.getHttpServer())
-        .get('/docs')
-        .expect(301); // Redirects to /docs/
+      return request(app.getHttpServer()).get('/docs').expect(301); // Redirects to /docs/
     });
   });
 });

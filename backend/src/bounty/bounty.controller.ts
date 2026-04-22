@@ -167,5 +167,4 @@ export class BountyController {
   async remove(@Param('id') id: string, @Request() req: any) {
     return this.service.remove(id, req.user.userId);
   }
-
 }

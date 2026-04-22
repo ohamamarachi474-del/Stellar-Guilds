@@ -47,13 +47,21 @@ describe('BountyController', () => {
 
       const result = await controller.submitWork(
         'bounty-1',
-        { submissions: [{ prUrl: 'https://example.com/submission', description: 'desc' }] },
+        {
+          submissions: [
+            { prUrl: 'https://example.com/submission', description: 'desc' },
+          ],
+        },
         { user: { userId: 'worker-1' } },
       );
 
       expect(service.submitWork).toHaveBeenCalledWith(
         'bounty-1',
-        { submissions: [{ prUrl: 'https://example.com/submission', description: 'desc' }] },
+        {
+          submissions: [
+            { prUrl: 'https://example.com/submission', description: 'desc' },
+          ],
+        },
         'worker-1',
       );
       expect(result).toEqual({
@@ -69,7 +77,11 @@ describe('BountyController', () => {
       await expect(
         controller.submitWork(
           'bounty-1',
-          { submissions: [{ prUrl: 'https://example.com/submission', description: 'desc' }] },
+          {
+            submissions: [
+              { prUrl: 'https://example.com/submission', description: 'desc' },
+            ],
+          },
           { user: { userId: 'intruder-1' } },
         ),
       ).rejects.toThrow(ForbiddenException);

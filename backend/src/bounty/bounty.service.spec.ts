@@ -48,7 +48,13 @@ describe('BountyService', () => {
   describe('findAll', () => {
     it('filters by status when status is provided', async () => {
       const mockBounties = [
-        { id: 'b1', title: 'Bounty 1', status: 'IN_PROGRESS', rewardAmount: 100, rewardToken: 'STELLAR' },
+        {
+          id: 'b1',
+          title: 'Bounty 1',
+          status: 'IN_PROGRESS',
+          rewardAmount: 100,
+          rewardToken: 'STELLAR',
+        },
       ];
       prisma.bounty.findMany.mockResolvedValue(mockBounties);
       prisma.bounty.count.mockResolvedValue(1);
@@ -66,7 +72,13 @@ describe('BountyService', () => {
 
     it('filters by tokenType (rewardToken) when provided', async () => {
       const mockBounties = [
-        { id: 'b1', title: 'XLM Bounty', status: 'OPEN', rewardAmount: 50, rewardToken: 'XLM' },
+        {
+          id: 'b1',
+          title: 'XLM Bounty',
+          status: 'OPEN',
+          rewardAmount: 50,
+          rewardToken: 'XLM',
+        },
       ];
       prisma.bounty.findMany.mockResolvedValue(mockBounties);
       prisma.bounty.count.mockResolvedValue(1);
@@ -83,7 +95,13 @@ describe('BountyService', () => {
 
     it('filters by minimum reward amount', async () => {
       const mockBounties = [
-        { id: 'b1', title: 'High Value', status: 'OPEN', rewardAmount: 500, rewardToken: 'STELLAR' },
+        {
+          id: 'b1',
+          title: 'High Value',
+          status: 'OPEN',
+          rewardAmount: 500,
+          rewardToken: 'STELLAR',
+        },
       ];
       prisma.bounty.findMany.mockResolvedValue(mockBounties);
       prisma.bounty.count.mockResolvedValue(1);
@@ -100,7 +118,13 @@ describe('BountyService', () => {
 
     it('combines all filters: status, tokenType, and minReward', async () => {
       const mockBounties = [
-        { id: 'b1', title: 'Combined Filter Test', status: 'OPEN', rewardAmount: 300, rewardToken: 'XLM' },
+        {
+          id: 'b1',
+          title: 'Combined Filter Test',
+          status: 'OPEN',
+          rewardAmount: 300,
+          rewardToken: 'XLM',
+        },
       ];
       prisma.bounty.findMany.mockResolvedValue(mockBounties);
       prisma.bounty.count.mockResolvedValue(1);
@@ -138,7 +162,14 @@ describe('BountyService', () => {
 
     it('applies guildId filter in combination with other filters', async () => {
       const mockBounties = [
-        { id: 'b1', title: 'Guild Bounty', status: 'OPEN', rewardAmount: 100, rewardToken: 'STELLAR', guildId: 'guild-1' },
+        {
+          id: 'b1',
+          title: 'Guild Bounty',
+          status: 'OPEN',
+          rewardAmount: 100,
+          rewardToken: 'STELLAR',
+          guildId: 'guild-1',
+        },
       ];
       prisma.bounty.findMany.mockResolvedValue(mockBounties);
       prisma.bounty.count.mockResolvedValue(1);
@@ -200,7 +231,10 @@ describe('BountyService', () => {
         'bounty-1',
         {
           submissions: [
-            { prUrl: 'https://example.com/submission', description: 'Initial work' },
+            {
+              prUrl: 'https://example.com/submission',
+              description: 'Initial work',
+            },
           ],
         },
         'worker-1',
@@ -234,7 +268,11 @@ describe('BountyService', () => {
       await expect(
         service.submitWork(
           'bounty-1',
-          { submissions: [{ prUrl: 'https://example.com/submission', description: 'desc' }] },
+          {
+            submissions: [
+              { prUrl: 'https://example.com/submission', description: 'desc' },
+            ],
+          },
           'intruder-1',
         ),
       ).rejects.toThrow(ForbiddenException);

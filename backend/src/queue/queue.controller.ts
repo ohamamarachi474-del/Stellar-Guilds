@@ -1,5 +1,18 @@
-import { Controller, Post, Get, Body, HttpCode, HttpStatus, Param } from '@nestjs/common';
-import { ApiTags, ApiOperation, ApiResponse, ApiProperty } from '@nestjs/swagger';
+import {
+  Controller,
+  Post,
+  Get,
+  Body,
+  HttpCode,
+  HttpStatus,
+  Param,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiOperation,
+  ApiResponse,
+  ApiProperty,
+} from '@nestjs/swagger';
 import { QueueService } from './queue.service';
 import { QUEUE_NAMES } from './queue.constants';
 

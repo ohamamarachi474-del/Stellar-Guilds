@@ -122,7 +122,9 @@ export class UserService {
         ...(updateDto.firstName && { firstName: updateDto.firstName }),
         ...(updateDto.lastName && { lastName: updateDto.lastName }),
         ...(updateDto.bio !== undefined && { bio: updateDto.bio }),
-        ...(updateDto.location !== undefined && { location: updateDto.location }),
+        ...(updateDto.location !== undefined && {
+          location: updateDto.location,
+        }),
         ...(updateDto.profileBio !== undefined && {
           profileBio: updateDto.profileBio,
         }),
@@ -192,7 +194,9 @@ export class UserService {
 
     // Award 50 XP if profile is 100% complete
     if (completeness === 100) {
-      this.logger.log(`User ${userId} achieved 100% profile completeness. Awarding 50 XP bonus.`);
+      this.logger.log(
+        `User ${userId} achieved 100% profile completeness. Awarding 50 XP bonus.`,
+      );
 
       await this.prisma.$transaction(async (tx: any) => {
         // Update user XP and mark bonus as received
@@ -208,7 +212,8 @@ export class UserService {
         await tx.notification.create({
           data: {
             userId,
-            message: '🎉 Congratulations! You earned 50 XP for completing your profile!',
+            message:
+              '🎉 Congratulations! You earned 50 XP for completing your profile!',
             type: 'PROFILE_COMPLETION_BONUS',
             metadata: {
               xpAwarded: 50,

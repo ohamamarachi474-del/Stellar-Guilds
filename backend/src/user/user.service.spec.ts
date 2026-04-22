@@ -69,7 +69,9 @@ describe('UserService', () => {
     expect(storageService.deleteFile).toHaveBeenCalledWith(
       'http://localhost:3000/uploads/old-avatar.png',
     );
-    expect(result.avatarUrl).toBe('http://localhost:3000/uploads/new-avatar.png');
+    expect(result.avatarUrl).toBe(
+      'http://localhost:3000/uploads/new-avatar.png',
+    );
   });
 
   it('throws when updating avatar for a missing user', async () => {

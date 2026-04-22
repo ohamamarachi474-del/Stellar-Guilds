@@ -2,11 +2,7 @@ import { BadRequestException } from '@nestjs/common';
 
 export const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
-export const ALLOWED_MIME_TYPES = [
-  'image/jpeg',
-  'image/png',
-  'image/webp',
-];
+export const ALLOWED_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp'];
 
 export const FILE_SIZE_ERROR_MESSAGE = `File size must be less than 5MB`;
 export const FILE_TYPE_ERROR_MESSAGE = `File must be one of the following types: ${ALLOWED_MIME_TYPES.join(', ')}`;

@@ -29,7 +29,10 @@ export enum UserRole {
 }
 
 export class CreateUserDto {
-  @ApiProperty({ description: 'User email address', example: 'user@example.com' })
+  @ApiProperty({
+    description: 'User email address',
+    example: 'user@example.com',
+  })
   @Transform(trimAndLowercase)
   @IsEmail()
   email!: string;

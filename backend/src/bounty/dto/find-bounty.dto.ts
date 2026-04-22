@@ -4,7 +4,15 @@ import { Type } from 'class-transformer';
 export class FindBountyDto {
   @IsOptional()
   @IsString()
-  @IsIn(['OPEN', 'IN_PROGRESS', 'IN_REVIEW', 'SUBMITTED_FOR_REVIEW', 'COMPLETED_PENDING_CLAIM', 'COMPLETED', 'CANCELLED'])
+  @IsIn([
+    'OPEN',
+    'IN_PROGRESS',
+    'IN_REVIEW',
+    'SUBMITTED_FOR_REVIEW',
+    'COMPLETED_PENDING_CLAIM',
+    'COMPLETED',
+    'CANCELLED',
+  ])
   status?: string;
 
   @IsOptional()

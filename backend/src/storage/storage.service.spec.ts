@@ -35,9 +35,9 @@ describe('StorageService', () => {
 
   it('uploads to S3 when AWS credentials are configured', async () => {
     const upload = jest.fn().mockReturnValue({
-      promise: jest
-        .fn()
-        .mockResolvedValue({ Location: 'https://bucket.s3.amazonaws.com/a.png' }),
+      promise: jest.fn().mockResolvedValue({
+        Location: 'https://bucket.s3.amazonaws.com/a.png',
+      }),
     });
     const deleteObject = jest.fn();
     const s3Factory = jest.fn().mockImplementation(() => ({
@@ -83,7 +83,9 @@ describe('StorageService', () => {
   });
 
   it('falls back to local storage when AWS configuration is missing', async () => {
-    const tempDir = await fs.mkdtemp(path.join(os.tmpdir(), 'storage-service-'));
+    const tempDir = await fs.mkdtemp(
+      path.join(os.tmpdir(), 'storage-service-'),
+    );
 
     configService.get.mockImplementation((key: string) => {
       const values: Record<string, string> = {
@@ -98,7 +100,9 @@ describe('StorageService', () => {
     expect(url).toMatch(/^http:\/\/localhost:3000\/uploads\/.+-photo\.png$/);
 
     const storedFilename = url.split('/').pop();
-    const storedContent = await fs.readFile(path.join(tempDir, storedFilename!));
+    const storedContent = await fs.readFile(
+      path.join(tempDir, storedFilename!),
+    );
     expect(storedContent.toString()).toBe('hello');
   });
 

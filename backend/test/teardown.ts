@@ -1,10 +1,10 @@
 /**
  * Teardown script for e2e test database
  * Run this script to clean up the test database after test runs
- * 
- * Usage: 
+ *
+ * Usage:
  *   ts-node test/teardown.ts
- * 
+ *
  * Or add to package.json scripts:
  *   "test:e2e:teardown": "ts-node test/teardown.ts"
  */

@@ -18,7 +18,12 @@ describe('QueueController', () => {
     getAllQueuesStats: jest.fn().mockResolvedValue({
       [QUEUE_NAMES.DUMMY]: { waiting: 0, active: 0, completed: 0, failed: 0 },
       [QUEUE_NAMES.EMAIL]: { waiting: 0, active: 0, completed: 0, failed: 0 },
-      [QUEUE_NAMES.ON_CHAIN_EVENTS]: { waiting: 0, active: 0, completed: 0, failed: 0 },
+      [QUEUE_NAMES.ON_CHAIN_EVENTS]: {
+        waiting: 0,
+        active: 0,
+        completed: 0,
+        failed: 0,
+      },
     }),
   };
 

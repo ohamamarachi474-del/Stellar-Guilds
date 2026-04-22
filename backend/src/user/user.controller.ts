@@ -90,10 +90,7 @@ export class UserController {
   @Patch('me')
   @UseGuards(JwtAuthGuard)
   @HttpCode(HttpStatus.OK)
-  async update(
-    @Request() req: any,
-    @Body() updateDto: UpdateUserDto,
-  ) {
+  async update(@Request() req: any, @Body() updateDto: UpdateUserDto) {
     return this.userService.updateUserProfile(req.user.userId, updateDto);
   }
 
@@ -141,13 +138,10 @@ export class UserController {
     status: HttpStatus.BAD_REQUEST,
     description: 'Invalid file size or type',
   })
-  async uploadAvatar(
-    @Request() req: any,
-    @UploadedFile() file: any,
-  ) {
+  async uploadAvatar(@Request() req: any, @UploadedFile() file: any) {
     // Validate file before passing to service
     validateImageFile(file);
-    
+
     const result = await this.userService.updateAvatar(req.user.userId, file);
     return {
       avatarUrl: result.avatarUrl,

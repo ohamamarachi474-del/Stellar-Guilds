@@ -175,7 +175,12 @@ export class GuildService {
     return this.prisma.guild.delete({ where: { id: guildId } });
   }
 
-  async searchGuilds(q: string | undefined, page = 0, size = 20, sort?: string) {
+  async searchGuilds(
+    q: string | undefined,
+    page = 0,
+    size = 20,
+    sort?: string,
+  ) {
     const textFilter = q
       ? {
           OR: [
@@ -228,7 +233,10 @@ export class GuildService {
       guildsWithTvl.sort((a: any, b: any) => b.tvl - a.tvl);
 
       // Apply pagination
-      const paginatedItems = guildsWithTvl.slice(page * size, (page + 1) * size);
+      const paginatedItems = guildsWithTvl.slice(
+        page * size,
+        (page + 1) * size,
+      );
 
       return {
         items: paginatedItems,

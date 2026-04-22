@@ -12,9 +12,13 @@ describe('AppController', () => {
         {
           provide: AppService,
           useValue: {
-            getHello: jest.fn().mockReturnValue('Stellar Guilds Backend - Database Integration Complete!')
-          }
-        }
+            getHello: jest
+              .fn()
+              .mockReturnValue(
+                'Stellar Guilds Backend - Database Integration Complete!',
+              ),
+          },
+        },
       ],
     }).compile();
 
@@ -23,7 +27,9 @@ describe('AppController', () => {
 
   describe('root', () => {
     it('should return the correct welcome message', () => {
-      expect(appController.getHello()).toBe('Stellar Guilds Backend - Database Integration Complete!');
+      expect(appController.getHello()).toBe(
+        'Stellar Guilds Backend - Database Integration Complete!',
+      );
     });
   });
 });

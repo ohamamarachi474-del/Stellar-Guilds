@@ -85,9 +85,9 @@ export class StorageService {
   private isAwsEnabled(): boolean {
     return Boolean(
       this.configService.get<string>('AWS_ACCESS_KEY_ID') &&
-        this.configService.get<string>('AWS_SECRET_ACCESS_KEY') &&
-        this.configService.get<string>('AWS_REGION') &&
-        this.configService.get<string>('AWS_S3_BUCKET'),
+      this.configService.get<string>('AWS_SECRET_ACCESS_KEY') &&
+      this.configService.get<string>('AWS_REGION') &&
+      this.configService.get<string>('AWS_S3_BUCKET'),
     );
   }
 
@@ -110,7 +110,10 @@ export class StorageService {
     return uploadResult.Location;
   }
 
-  private async uploadToLocal(buffer: Buffer, filename: string): Promise<string> {
+  private async uploadToLocal(
+    buffer: Buffer,
+    filename: string,
+  ): Promise<string> {
     const uploadsDir = this.getUploadsDir();
     await fs.mkdir(uploadsDir, { recursive: true });
 
@@ -125,7 +128,9 @@ export class StorageService {
       this.s3Client = new this.s3ClientFactory({
         region: this.configService.get<string>('AWS_REGION'),
         accessKeyId: this.configService.get<string>('AWS_ACCESS_KEY_ID'),
-        secretAccessKey: this.configService.get<string>('AWS_SECRET_ACCESS_KEY'),
+        secretAccessKey: this.configService.get<string>(
+          'AWS_SECRET_ACCESS_KEY',
+        ),
       });
     }
 
@@ -147,8 +152,10 @@ export class StorageService {
   }
 
   private getUploadsDir(): string {
-    return this.configService.get<string>('STORAGE_LOCAL_DIR') ??
-      path.join(process.cwd(), 'uploads');
+    return (
+      this.configService.get<string>('STORAGE_LOCAL_DIR') ??
+      path.join(process.cwd(), 'uploads')
+    );
   }
 
   private getPublicBaseUrl(): string {

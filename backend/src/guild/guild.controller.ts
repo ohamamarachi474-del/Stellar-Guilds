@@ -58,7 +58,12 @@ export class GuildController {
 
   @Get()
   async search(@Query() query: SearchGuildDto) {
-    return this.guildService.searchGuilds(query.q, query.page, query.size, query.sort);
+    return this.guildService.searchGuilds(
+      query.q,
+      query.page,
+      query.size,
+      query.sort,
+    );
   }
 
   @UseGuards(JwtAuthGuard)
@@ -242,8 +247,12 @@ export class GuildController {
   ) {
     // Validate file before passing to service
     validateImageFile(file);
-    
-    const result = await this.guildService.updateGuildLogo(id, file, req.user.userId);
+
+    const result = await this.guildService.updateGuildLogo(
+      id,
+      file,
+      req.user.userId,
+    );
     return {
       logoUrl: result.logoUrl,
       message: 'Guild logo updated successfully',
@@ -290,8 +299,12 @@ export class GuildController {
   ) {
     // Validate file before passing to service
     validateImageFile(file);
-    
-    const result = await this.guildService.updateGuildBanner(id, file, req.user.userId);
+
+    const result = await this.guildService.updateGuildBanner(
+      id,
+      file,
+      req.user.userId,
+    );
     return {
       bannerUrl: result.bannerUrl,
       message: 'Guild banner updated successfully',

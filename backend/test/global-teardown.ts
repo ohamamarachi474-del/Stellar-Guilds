@@ -7,9 +7,9 @@ import { PrismaClient } from '@prisma/client';
 
 export default async function globalTeardown() {
   console.log('🧹 Global e2e test teardown starting...');
-  
+
   const prisma = new PrismaClient();
-  
+
   try {
     // Clean up test database
     const tablenames = await prisma.$queryRaw<
@@ -31,6 +31,6 @@ export default async function globalTeardown() {
   } finally {
     await prisma.$disconnect();
   }
-  
+
   console.log('🎉 Global e2e test teardown complete');
 }

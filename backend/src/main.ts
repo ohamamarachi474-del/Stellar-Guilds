@@ -5,6 +5,7 @@ import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 import { ResponseInterceptor } from './common/interceptors/response.interceptor';
 import { WinstonLogger } from './logger/winston.logger';
+import { ErrorReportingService } from './common/services/error-reporting.service';
 import * as express from 'express';
 import * as path from 'path';
 
@@ -15,7 +16,10 @@ async function bootstrap() {
 
   const logger = new WinstonLogger('Main');
   const httpAdapterHost = app.get(HttpAdapterHost);
-  app.useGlobalFilters(new AllExceptionsFilter(httpAdapterHost));
+  const errorReportingService = app.get(ErrorReportingService);
+  app.useGlobalFilters(
+    new AllExceptionsFilter(httpAdapterHost, errorReportingService),
+  );
 
   // Apply response standardization globally
   app.useGlobalInterceptors(new ResponseInterceptor());

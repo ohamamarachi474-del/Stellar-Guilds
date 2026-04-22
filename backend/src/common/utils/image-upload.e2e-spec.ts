@@ -79,7 +79,9 @@ describe('Image Upload Endpoints (e2e)', () => {
   afterAll(async () => {
     // Cleanup
     if (testGuild?.id) {
-      await prisma.guildMembership.deleteMany({ where: { guildId: testGuild.id } });
+      await prisma.guildMembership.deleteMany({
+        where: { guildId: testGuild.id },
+      });
       await prisma.guild.delete({ where: { id: testGuild.id } });
     }
     if (testUser?.id) {
@@ -92,7 +94,7 @@ describe('Image Upload Endpoints (e2e)', () => {
   describe('POST /users/me/avatar', () => {
     it('should upload avatar with valid PNG file', () => {
       const image = createTestImage('image/png');
-      
+
       return request(app.getHttpServer())
         .post('/users/me/avatar')
         .set('Authorization', `Bearer ${authToken}`)
@@ -107,7 +109,7 @@ describe('Image Upload Endpoints (e2e)', () => {
 
     it('should upload avatar with valid JPEG file', () => {
       const image = createTestImage('image/jpeg');
-      
+
       return request(app.getHttpServer())
         .post('/users/me/avatar')
         .set('Authorization', `Bearer ${authToken}`)
@@ -117,7 +119,7 @@ describe('Image Upload Endpoints (e2e)', () => {
 
     it('should upload avatar with valid WebP file', () => {
       const image = createTestImage('image/webp');
-      
+
       return request(app.getHttpServer())
         .post('/users/me/avatar')
         .set('Authorization', `Bearer ${authToken}`)
@@ -127,7 +129,7 @@ describe('Image Upload Endpoints (e2e)', () => {
 
     it('should reject avatar upload without authentication', () => {
       const image = createTestImage('image/png');
-      
+
       return request(app.getHttpServer())
         .post('/users/me/avatar')
         .attach('file', image.buffer, image.originalname)
@@ -136,14 +138,16 @@ describe('Image Upload Endpoints (e2e)', () => {
 
     it('should reject GIF file type', () => {
       const gifBuffer = Buffer.from('GIF89a');
-      
+
       return request(app.getHttpServer())
         .post('/users/me/avatar')
         .set('Authorization', `Bearer ${authToken}`)
         .attach('file', gifBuffer, 'test.gif')
         .expect(400)
         .expect((res) => {
-          expect(res.body.message).toContain('File must be one of the following types');
+          expect(res.body.message).toContain(
+            'File must be one of the following types',
+          );
         });
     });
   });
@@ -151,7 +155,7 @@ describe('Image Upload Endpoints (e2e)', () => {
   describe('POST /guilds/:id/logo', () => {
     it('should upload logo with valid PNG file', () => {
       const image = createTestImage('image/png');
-      
+
       return request(app.getHttpServer())
         .post(`/guilds/${testGuild.id}/logo`)
         .set('Authorization', `Bearer ${authToken}`)
@@ -166,7 +170,7 @@ describe('Image Upload Endpoints (e2e)', () => {
 
     it('should reject logo upload without authentication', () => {
       const image = createTestImage('image/png');
-      
+
       return request(app.getHttpServer())
         .post(`/guilds/${testGuild.id}/logo`)
         .attach('file', image.buffer, image.originalname)
@@ -176,7 +180,7 @@ describe('Image Upload Endpoints (e2e)', () => {
     it('should reject logo upload for non-existent guild', () => {
       const image = createTestImage('image/png');
       const fakeId = 'non-existent-id';
-      
+
       return request(app.getHttpServer())
         .post(`/guilds/${fakeId}/logo`)
         .set('Authorization', `Bearer ${authToken}`)
@@ -188,7 +192,7 @@ describe('Image Upload Endpoints (e2e)', () => {
   describe('POST /guilds/:id/banner', () => {
     it('should upload banner with valid PNG file', () => {
       const image = createTestImage('image/png');
-      
+
       return request(app.getHttpServer())
         .post(`/guilds/${testGuild.id}/banner`)
         .set('Authorization', `Bearer ${authToken}`)
@@ -197,13 +201,15 @@ describe('Image Upload Endpoints (e2e)', () => {
         .expect((res) => {
           expect(res.body.data).toBeDefined();
           expect(res.body.data.bannerUrl).toBeDefined();
-          expect(res.body.data.message).toBe('Guild banner updated successfully');
+          expect(res.body.data.message).toBe(
+            'Guild banner updated successfully',
+          );
         });
     });
 
     it('should reject banner upload without authentication', () => {
       const image = createTestImage('image/png');
-      
+
       return request(app.getHttpServer())
         .post(`/guilds/${testGuild.id}/banner`)
         .attach('file', image.buffer, image.originalname)

@@ -2,7 +2,11 @@ import { Injectable, Logger } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bullmq';
 import { Queue } from 'bullmq';
 import { QUEUE_NAMES } from './queue.constants';
-import { DummyJobData, EmailJobData, OnChainEventJobData } from './queue.interfaces';
+import {
+  DummyJobData,
+  EmailJobData,
+  OnChainEventJobData,
+} from './queue.interfaces';
 
 @Injectable()
 export class QueueService {
@@ -93,7 +97,12 @@ export class QueueService {
   /**
    * Get all queues statistics
    */
-  async getAllQueuesStats(): Promise<Record<string, { waiting: number; active: number; completed: number; failed: number }>> {
+  async getAllQueuesStats(): Promise<
+    Record<
+      string,
+      { waiting: number; active: number; completed: number; failed: number }
+    >
+  > {
     const [dummy, email, onChainEvents] = await Promise.all([
       this.getQueueStats(QUEUE_NAMES.DUMMY),
       this.getQueueStats(QUEUE_NAMES.EMAIL),

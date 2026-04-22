@@ -27,7 +27,9 @@ export class BountyReminderService {
     const twentySixHoursFromNow = new Date(now.getTime() + 26 * 60 * 60 * 1000);
 
     this.logger.log('Checking for expiring bounties...');
-    this.logger.debug(`Time window: ${twentyHoursFromNow.toISOString()} to ${twentySixHoursFromNow.toISOString()}`);
+    this.logger.debug(
+      `Time window: ${twentyHoursFromNow.toISOString()} to ${twentySixHoursFromNow.toISOString()}`,
+    );
 
     try {
       const expiringBounties = await this.prisma.bounty.findMany({
@@ -49,13 +51,18 @@ export class BountyReminderService {
         },
       });
 
-      this.logger.log(`Found ${expiringBounties.length} bounties nearing expiration`);
+      this.logger.log(
+        `Found ${expiringBounties.length} bounties nearing expiration`,
+      );
 
       for (const bounty of expiringBounties) {
         await this.processBountyReminder(bounty);
       }
     } catch (error) {
-      this.logger.error('Error processing bounty reminders:', error instanceof Error ? error.message : String(error));
+      this.logger.error(
+        'Error processing bounty reminders:',
+        error instanceof Error ? error.message : String(error),
+      );
     }
   }
 
@@ -78,7 +85,9 @@ export class BountyReminderService {
     }
 
     if (!bounty.deadline) {
-      this.logger.warn(`Bounty ${bounty.id} has no deadline, skipping reminder`);
+      this.logger.warn(
+        `Bounty ${bounty.id} has no deadline, skipping reminder`,
+      );
       return;
     }
 

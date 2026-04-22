@@ -102,7 +102,10 @@ describe('QueueService', () => {
 
       await service.addOnChainEventJob(data);
 
-      expect(onChainEventsQueue.add).toHaveBeenCalledWith('process-event', data);
+      expect(onChainEventsQueue.add).toHaveBeenCalledWith(
+        'process-event',
+        data,
+      );
     });
   });
 

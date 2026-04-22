@@ -29,7 +29,9 @@ export class TreasuryService {
       });
 
       if (existing) {
-        this.logger.log(`Transaction ${event.txHash} already recorded, skipping`);
+        this.logger.log(
+          `Transaction ${event.txHash} already recorded, skipping`,
+        );
         return existing;
       }
 
@@ -52,7 +54,8 @@ export class TreasuryService {
 
       return transaction;
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+      const errorMessage =
+        error instanceof Error ? error.message : 'Unknown error';
       this.logger.error(
         `Failed to record treasury transaction ${event.txHash}: ${errorMessage}`,
       );

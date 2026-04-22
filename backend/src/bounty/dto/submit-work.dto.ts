@@ -51,6 +51,8 @@ export class SubmitBountyWorkDto {
 
   @IsOptional()
   @IsString()
-  @MaxLength(1000, { message: 'Additional comments must not exceed 1000 characters' })
+  @MaxLength(1000, {
+    message: 'Additional comments must not exceed 1000 characters',
+  })
   additionalComments?: string;
 }

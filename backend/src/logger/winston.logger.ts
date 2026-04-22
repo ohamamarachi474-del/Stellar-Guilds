@@ -16,7 +16,13 @@ export class WinstonLogger extends NestLogger {
       winston.format.splat(),
       winston.format.json(),
       winston.format.printf(
-        ({ timestamp, level, message, context, ...meta }: winston.Logform.TransformableInfo) => {
+        ({
+          timestamp,
+          level,
+          message,
+          context,
+          ...meta
+        }: winston.Logform.TransformableInfo) => {
           return JSON.stringify({
             timestamp,
             level: level.toUpperCase(),

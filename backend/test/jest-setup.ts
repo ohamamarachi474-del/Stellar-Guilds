@@ -19,5 +19,5 @@ beforeAll(() => {
 // Global afterAll hook for cleanup
 afterAll(async () => {
   // Give time for any pending operations to complete
-  await new Promise(resolve => setTimeout(resolve, 500));
+  await new Promise((resolve) => setTimeout(resolve, 500));
 });
