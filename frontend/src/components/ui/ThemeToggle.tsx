@@ -7,8 +7,8 @@ import { Sun, Moon } from 'lucide-react'
 type Theme = 'light' | 'dark'
 
 const icons: Record<Theme, React.ReactNode> = {
-  light: <Sun size={18} />,
-  dark: <Moon size={18} />,
+  light: <Sun size={18} className="text-yellow-500" />,
+  dark: <Moon size={18} className="text-slate-300" />,
 }
 
 export function ThemeToggle() {
@@ -36,7 +36,7 @@ export function ThemeToggle() {
       aria-label={`Current theme: ${current}. Switch to ${next}`}
       className="p-2 rounded-md hover:bg-gray-200 dark:hover:bg-stellar-lightNavy transition-colors"
     >
-      <div className={`transition-transform duration-300 text-gray-900 dark:text-white ${isRotating ? 'rotate-180' : ''}`}>
+      <div className={`transition-transform duration-300 ${isRotating ? 'rotate-180' : ''}`}>
         {icons[current]}
       </div>
     </button>
