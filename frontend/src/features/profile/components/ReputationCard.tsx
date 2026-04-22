@@ -1,6 +1,9 @@
+"use client";
+
 import React from "react";
 import { UserProfile } from "../types";
 import { Trophy, Star, Shield, Gem } from "lucide-react";
+import { ExperienceProgressBar } from "./ExperienceProgressBar";
 
 import { twMerge } from "tailwind-merge";
 
@@ -26,10 +29,6 @@ const tierIcons = {
 
 export const ReputationCard: React.FC<ReputationCardProps> = ({ user }) => {
   const TierIcon = tierIcons[user.tier] || Shield;
-  const progressPercentage = Math.min(
-    (user.reputationScore / user.nextTierScore) * 100,
-    100
-  );
 
   return (
     <div
@@ -58,20 +57,10 @@ export const ReputationCard: React.FC<ReputationCardProps> = ({ user }) => {
         </div>
       </div>
 
-      <div className="space-y-2">
-        <div className="flex justify-between text-xs font-medium text-slate-400">
-          <span>Progress to next tier</span>
-          <span>
-            {user.reputationScore} / {user.nextTierScore}
-          </span>
-        </div>
-        <div className="h-3 w-full overflow-hidden rounded-full bg-slate-800/50">
-          <div
-            className="h-full bg-gradient-to-r from-blue-500 to-indigo-600 transition-all duration-1000 ease-out"
-            style={{ width: `${progressPercentage}%` }}
-          />
-        </div>
-      </div>
+      <ExperienceProgressBar
+        currentXP={user.reputationScore}
+        nextLevelXP={user.nextTierScore}
+      />
     </div>
   );
 };
