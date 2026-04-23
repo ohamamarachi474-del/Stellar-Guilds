@@ -101,7 +101,7 @@ export class PayoutReportService {
             </tr>
         </thead>
         <tbody>
-            ${payouts.map(payout => `
+            ${payouts.map((payout: any) => `
                 <tr>
                     <td>${payout.createdAt.toLocaleDateString()}</td>
                     <td>${payout.toUser.firstName} ${payout.toUser.lastName} (${payout.toUser.username})</td>

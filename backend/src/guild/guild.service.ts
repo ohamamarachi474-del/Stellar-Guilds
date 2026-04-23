@@ -13,6 +13,7 @@ import { StorageService } from '../storage/storage.service';
 import { CreateGuildDto } from './dto/create-guild.dto';
 import { UpdateGuildDto } from './dto/update-guild.dto';
 import { InviteMemberDto } from './dto/invite-member.dto';
+import { UpdateGuildMembershipDto } from './dto/update-guild-membership.dto';
 import { randomUUID } from 'crypto';
 
 @Injectable()
