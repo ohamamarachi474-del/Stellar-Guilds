@@ -1,7 +1,5 @@
 #![no_std]
 
-extern crate alloc;
-
 use soroban_sdk::{contract, contractimpl, Address, Env, String, Vec};
 
 mod events;
@@ -3204,7 +3202,7 @@ mod tests {
             metadata,
             String::from_str(
                 &env,
-                "{\"name\":\"Stellar Hero #1\",\"rank\":\"Captain\",\"image\":\"ipfs://stellar-hero-1\"}"
+                "{\"name\":\"Stellar Hero\",\"rank\":\"Captain\",\"image\":\"ipfs://stellar-hero-captain\"}"
             )
         );
     }
@@ -3220,7 +3218,7 @@ mod tests {
             metadata,
             String::from_str(
                 &env,
-                "{\"name\":\"Stellar Hero #3\",\"rank\":\"Master\",\"image\":\"ipfs://stellar-hero-3\"}"
+                "{\"name\":\"Stellar Hero\",\"rank\":\"Master\",\"image\":\"ipfs://stellar-hero-master\"}"
             )
         );
     }
