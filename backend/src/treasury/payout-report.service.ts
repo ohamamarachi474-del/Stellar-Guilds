@@ -48,8 +48,8 @@ export class PayoutReportService {
 
     // Calculate summary stats
     const totalPayouts = payouts.length;
-    const totalAmount = payouts.reduce((sum, payout) => sum + Number(payout.amount), 0);
-    const completedPayouts = payouts.filter(p => p.status === 'SENT').length;
+    const totalAmount = payouts.reduce((sum: number, payout: any) => sum + Number(payout.amount), 0);
+    const completedPayouts = payouts.filter((p: any) => p.status === 'SENT').length;
 
     // Generate HTML
     const html = `

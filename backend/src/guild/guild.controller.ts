@@ -25,7 +25,7 @@ import { UpdateGuildDto } from './dto/update-guild.dto';
 import { InviteMemberDto } from './dto/invite-member.dto';
 import { ApproveInviteDto } from './dto/approve-invite.dto';
 import { SearchGuildDto } from './dto/search-guild.dto';
-import { UpdateGuildMembershipDto } from './dto/update-guild-membership.dto';
+import { GuildDetailsDto } from './dto/guild-details.dto';
 import { validateImageFile } from '../common/utils/file-upload.validator';
 import {
   ApiTags,
