@@ -13,7 +13,7 @@ export default function GuildsPage() {
   const router = useRouter();
   const { guilds, fetchGuilds } = useGuildStore();
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState<string>("");
+  const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set());
   const [selectedTier, setSelectedTier] = useState<string>("");
 
   useEffect(() => {
@@ -21,7 +21,6 @@ export default function GuildsPage() {
   }, [fetchGuilds]);
 
   const categories = [
-    "All",
     "Development",
     "DeFi",
     "Education",
@@ -38,9 +37,8 @@ export default function GuildsPage() {
       guild.description.toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesCategory =
-      !selectedCategory ||
-      selectedCategory === "All" ||
-      guild.category === selectedCategory;
+      selectedCategories.size === 0 ||
+      (guild.category !== undefined && selectedCategories.has(guild.category));
 
     const matchesTier =
       !selectedTier || selectedTier === "All" || guild.tier === selectedTier;
@@ -70,7 +68,7 @@ export default function GuildsPage() {
 
         {/* Search and Filters */}
         <div className="bg-slate-900/40 rounded-lg shadow-sm border border-slate-800/50 p-6 mb-6">
-          <div className="flex flex-col lg:flex-row gap-4">
+          <div className="flex flex-col lg:flex-row gap-4 mb-4">
             {/* Search */}
             <div className="flex-1">
               <div className="relative">
@@ -83,21 +81,6 @@ export default function GuildsPage() {
                   className="w-full pl-10 pr-4 py-2 border border-slate-700/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-900/40 text-white"
                 />
               </div>
-            </div>
-
-            {/* Category Filter */}
-            <div className="w-full lg:w-48">
-              <select
-                value={selectedCategory}
-                onChange={(e) => setSelectedCategory(e.target.value)}
-                className="w-full px-4 py-2 border border-slate-700/50 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 bg-slate-900/40 text-white"
-              >
-                {categories.map((cat) => (
-                  <option key={cat} value={cat === "All" ? "" : cat}>
-                    {cat}
-                  </option>
-                ))}
-              </select>
             </div>
 
             {/* Tier Filter */}
@@ -114,6 +97,51 @@ export default function GuildsPage() {
                 ))}
               </select>
             </div>
+          </div>
+
+          {/* Category Filters */}
+          <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-800/50">
+            <span className="text-sm font-medium text-slate-400 mr-2">Categories:</span>
+            {categories.map((cat) => {
+              const isActive = selectedCategories.has(cat);
+              const count = guilds.filter((g) => g.category === cat).length;
+              return (
+                <button
+                  key={cat}
+                  onClick={() => {
+                    const newSet = new Set(selectedCategories);
+                    if (newSet.has(cat)) {
+                      newSet.delete(cat);
+                    } else {
+                      newSet.add(cat);
+                    }
+                    setSelectedCategories(newSet);
+                  }}
+                  className={`flex items-center px-3 py-1.5 rounded-full text-sm font-medium transition-colors border ${
+                    isActive
+                      ? "bg-indigo-500/20 text-indigo-400 border-indigo-500/50"
+                      : "bg-slate-800/50 text-slate-400 border-slate-700/50 hover:bg-slate-800 hover:text-slate-300"
+                  }`}
+                >
+                  {cat}
+                  <span
+                    className={`ml-1.5 text-xs px-1.5 py-0.5 rounded-full ${
+                      isActive ? "bg-indigo-500/20 text-indigo-300" : "bg-slate-700 text-slate-300"
+                    }`}
+                  >
+                    {count}
+                  </span>
+                </button>
+              );
+            })}
+            {selectedCategories.size > 0 && (
+              <button
+                onClick={() => setSelectedCategories(new Set())}
+                className="ml-2 px-3 py-1.5 text-sm font-medium text-slate-400 hover:text-white transition-colors underline"
+              >
+                Clear All
+              </button>
+            )}
           </div>
         </div>
 
