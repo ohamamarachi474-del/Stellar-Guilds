@@ -103,6 +103,7 @@ model User {
   privacySettings    PrivacySettings?
   bountyApplications BountyApplication[]
   bountyPayouts      BountyPayout[]
+  apiKeys            ApiKey[]
 
   @@index([role])
   @@index([isActive])
@@ -358,4 +359,18 @@ model TreasuryTransaction {
   @@index([guildId])
   @@index([txHash])
   @@map("treasury_transactions")
+}
+
+model ApiKey {
+  id        String   @id @default(cuid())
+  createdAt DateTime @default(now())
+  userId    String
+  keyHash   String   @unique
+  label     String?
+  revokedAt DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("api_keys")
 }

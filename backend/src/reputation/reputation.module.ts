@@ -5,5 +5,6 @@ import { ReputationController } from './reputation.controller';
 @Module({
   controllers: [ReputationController],
   providers: [ReputationService],
+  exports: [ReputationService],
 })
 export class ReputationModule {}

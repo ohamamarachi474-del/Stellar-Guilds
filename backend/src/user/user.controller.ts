@@ -43,10 +43,14 @@ import {
   NotificationPreferencesDto,
 } from './dto/notification-preferences.dto';
 import { validateImageFile } from '../common/utils/file-upload.validator';
+import { ReputationService } from '../reputation/reputation.service';
 
 @Controller('users')
 export class UserController {
-  constructor(private userService: UserService) {}
+  constructor(
+    private userService: UserService,
+    private reputationService: ReputationService,
+  ) {}
 
   /**
    * Get current authenticated user profile
@@ -290,5 +294,21 @@ export class UserController {
   @HttpCode(HttpStatus.OK)
   async reactivateUser(@Param('userId') userId: string) {
     return this.userService.reactivateUser(userId);
+  }
+
+  /**
+   * Get paginated reputation history for a user (cursor-based)
+   */
+  @Get(':id/reputation')
+  getReputation(
+    @Param('id') id: string,
+    @Query('limit') limit?: string,
+    @Query('cursor') cursor?: string,
+  ) {
+    return this.reputationService.getReputationHistory(
+      id,
+      limit ? parseInt(limit, 10) : 20,
+      cursor,
+    );
   }
 }

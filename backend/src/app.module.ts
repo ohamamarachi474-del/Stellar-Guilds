@@ -15,6 +15,7 @@ import { LoggerModule } from './logger/logger.module';
 import { QueueModule } from './queue/queue.module';
 import { ProxylModule } from './proxyl/proxyl.module';
 import { ReputationModule } from './reputation/reputation.module';
+import { VersionModule } from './version/version.module';
 import { ErrorReportingModule } from './common/modules/error-reporting.module';
 import { RedisModule } from './common/services/redis.module';
 import { MaintenanceGuard } from './common/guards/maintenance.guard';
@@ -43,6 +44,7 @@ import { MaintenanceGuard } from './common/guards/maintenance.guard';
     QueueModule,
     ProxylModule,
     ReputationModule,
+    VersionModule,
   ],
   controllers: [AppController],
   providers: [

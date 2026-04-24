@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, Query } from '@nestjs/common';
 import { ReputationService } from './reputation.service';
 import { CreateReputationDto } from './dto/create-reputation.dto';
 import { UpdateReputationDto } from './dto/update-reputation.dto';
